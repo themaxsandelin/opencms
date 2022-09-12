@@ -1,2 +1,2 @@
-# opencms
-An open source CMS
+# Open CMS
+An open source CMS.
