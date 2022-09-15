@@ -11,19 +11,23 @@
     "url": "git+https://github.com/themaxsandelin/opencms.git"
   },
   "scripts": {
-    "build": "npx tsc",
-    "start": "node dist/index.js",
-    "dev": "concurrently \"npx tsc --watch\" \"nodemon -q dist/index.js\""
+    "dev": "ts-node -r tsconfig-paths/register src/index.ts",
+    "build": "npx tsc && npx tsc-alias",
+    "start": "node dist/index.js"
   },
   "dependencies": {
+    "@prisma/client": "^4.3.1",
     "dotenv": "^16.0.2",
-    "express": "^4.18.1"
+    "express": "^4.18.1",
+    "zod": "^3.19.1"
   },
   "devDependencies": {
     "@types/express": "^4.17.13",
     "@types/node": "^18.7.16",
-    "concurrently": "^7.4.0",
-    "nodemon": "^2.0.19",
+    "prisma": "^4.3.1",
+    "ts-node": "^10.9.1",
+    "tsc-alias": "^1.7.0",
+    "tsconfig-paths": "^4.1.0",
     "typescript": "^4.8.3"
   }
 }

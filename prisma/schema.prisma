@@ -1,0 +1,23 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlserver"
+  url = env("DATABASE_URL")
+}
+
+model Site {
+  id String @id @default(uuid())
+  name String
+  key String @unique
+  pages Page[]
+}
+
+model Page {
+  id String @id @default(uuid())
+  title String
+  slug String
+  site Site @relation(fields: [siteId], references: [id])
+  siteId String
+}
