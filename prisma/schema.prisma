@@ -30,13 +30,6 @@ model PublishingEnvironment {
   contentVersionPublications ContentBlockVariantVersionPublication[]
 }
 
-model Locale {
-  id String @id @default(uuid())
-  name String
-  key String @unique
-  contentBlockVariantVersions ContentBlockVariantVersion[]
-}
-
 model ContentBlock {
   id String @id @default(uuid())
   name String
@@ -63,10 +56,9 @@ model SiteOnContentBlockVariant {
 model ContentBlockVariantVersion {
   id String @id @default(uuid())
   content String @db.NVarChar(MAX)
+  locale String
   variant ContentBlockVariant @relation(fields: [contentBlockVariantId], references: [id])
   contentBlockVariantId String
-  locale Locale @relation(fields: [localeId], references: [id])
-  localeId String
   publications ContentBlockVariantVersionPublication[]
 }
 
