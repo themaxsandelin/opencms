@@ -12,6 +12,7 @@ model Site {
   name String
   key String @unique
   pages Page[]
+  contentBlockVariants SiteOnContentBlockVariant[]
 }
 
 model Page {
@@ -20,4 +21,59 @@ model Page {
   slug String
   site Site @relation(fields: [siteId], references: [id])
   siteId String
+}
+
+model PublishingEnvironment {
+  id String @id @default(uuid())
+  name String
+  key String @unique
+  contentVersionPublications ContentBlockVariantVersionPublication[]
+}
+
+model Locale {
+  id String @id @default(uuid())
+  name String
+  key String @unique
+  contentBlockVariantVersions ContentBlockVariantVersion[]
+}
+
+model ContentBlock {
+  id String @id @default(uuid())
+  name String
+  type String
+  variants ContentBlockVariant[]
+}
+
+model ContentBlockVariant {
+  id String @id @default(uuid())
+  contentBlock ContentBlock @relation(fields: [contentBlockId], references: [id])
+  contentBlockId String
+  versions ContentBlockVariantVersion[]
+  sites SiteOnContentBlockVariant[]
+}
+
+model SiteOnContentBlockVariant {
+  id String @id @default(uuid())
+  variant ContentBlockVariant @relation(fields: [variantId], references: [id])
+  variantId String
+  site Site @relation(fields: [siteId], references: [id])
+  siteId String
+}
+
+model ContentBlockVariantVersion {
+  id String @id @default(uuid())
+  content String @db.NVarChar(MAX)
+  variant ContentBlockVariant @relation(fields: [contentBlockVariantId], references: [id])
+  contentBlockVariantId String
+  locale Locale @relation(fields: [localeId], references: [id])
+  localeId String
+  publications ContentBlockVariantVersionPublication[]
+}
+
+model ContentBlockVariantVersionPublication {
+  id String @id @default(uuid())
+  version ContentBlockVariantVersion @relation(fields: [versionId], references: [id])
+  versionId String
+  environment PublishingEnvironment @relation(fields: [environmentId], references: [id])
+  environmentId String
 }
