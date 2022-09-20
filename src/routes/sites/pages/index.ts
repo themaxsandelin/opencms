@@ -2,6 +2,9 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
 
+// Routers
+import LayoutRouter from './layouts';
+
 // Utils
 import { validateRequest } from '@/utils/validation';
 
@@ -52,5 +55,38 @@ router.post('/', validateRequest(createPageSchema), async (req: Request, res: Re
     res.status(500).json({ error: JSON.stringify(error) });
   }
 });
+
+router.use('/:pageId', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { pageId } = req.params;
+    const page = await prisma.page.findFirst({
+      where: {
+        id: pageId,
+      }
+    });
+    if (!page) {
+      return res.status(404).json({ error: 'Page not found.' });
+    }
+
+    req.body.page = page;
+    next();
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: JSON.stringify(error) });
+  }
+});
+
+router.get('/:pageId', async (req: Request, res: Response) => {
+  try {
+    const { page } = req.body;
+
+    return res.json(page);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: JSON.stringify(error) });
+  }
+});
+
+router.use('/:pageId/layouts', LayoutRouter);
 
 export default router;
