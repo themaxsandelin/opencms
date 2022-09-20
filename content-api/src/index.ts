@@ -9,10 +9,10 @@ dotenv.config();
 
 const app: Express = express();
 app.use(express.json());
-const port = process.env.PORT || 3100;
+const port = process.env.PORT || 3200;
 
 app.use(router);
 
 app.listen(port, () => {
-  console.log('[🤖 Server]: Up and running!');
+  console.log('[🤖 Content API Server]: Up and running!');
 });
