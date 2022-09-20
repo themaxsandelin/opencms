@@ -1,0 +1,9 @@
+{
+  "$schema": "./node_modules/nx/schemas/workspace-schema.json",
+  "version": 2,
+  "projects": {
+    "admin-api": "apps/admin-api",
+    "content-api": "apps/content-api",
+    "utils": "libs/utils"
+  }
+}
