@@ -13,7 +13,7 @@ const router = Router();
 
 router.get('/', validateRequest(queryContentSchema), async (req: Request, res: Response) => {
   try {
-    const { pagePath, environment, locale } = req.query;
+    const { pagePath, environment, site: siteKey, locale } = req.query;
 
     const publishingEnvironment = await prisma.publishingEnvironment.findFirst({
       where: {
@@ -24,13 +24,23 @@ router.get('/', validateRequest(queryContentSchema), async (req: Request, res: R
       return res.status(400).json({ error: 'Invalid or unknown environment key.' });
     }
 
+    const site = await prisma.site.findFirst({
+      where: {
+        key: (siteKey as string)
+      }
+    });
+    if (!site) {
+      return res.status(400).json({ error: `Could not find a site with the key ${siteKey}` });
+    }
+
     const page = await prisma.page.findFirst({
       where: {
-        slug: (pagePath as string)
+        slug: (pagePath as string),
+        siteId: site.id
       }
     });
     if (!page) {
-      return res.status(404).json({ error: `Could not find a page with the path ${pagePath}.` });
+      return res.status(400).json({ error: `Could not find a page with the path ${pagePath}.` });
     }
 
     const selectedLocale = locales.find(localeObj => localeObj.code.toLowerCase() === (locale as string).toLowerCase());
