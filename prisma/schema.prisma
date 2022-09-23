@@ -27,6 +27,9 @@ model Page {
   id String @id @default(uuid())
   title String
   slug String
+  children Page[] @relation("children")
+  parent Page? @relation("children", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  parentId String? @map("pageId")
   site Site @relation(fields: [siteId], references: [id])
   siteId String
   layouts PageLayout[]
@@ -35,7 +38,7 @@ model Page {
 model PageLayout {
   id String @id @default(uuid())
   name String
-  page Page @relation(fields: [pageId], references: [id])
+  page Page @relation(fields: [pageId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   pageId String
   versions PageLayoutVersion[]
 }
@@ -43,16 +46,16 @@ model PageLayout {
 model PageLayoutVersion {
   id String @id @default(uuid())
   content String @db.NVarChar(MAX)
-  layout PageLayout @relation(fields: [pageLayoutId], references: [id])
+  layout PageLayout @relation(fields: [pageLayoutId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   pageLayoutId String
   publications PageLayoutVersionPublication[]
 }
 
 model PageLayoutVersionPublication {
   id String @id @default(uuid())
-  version PageLayoutVersion @relation(fields: [versionId], references: [id])
+  version PageLayoutVersion @relation(fields: [versionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   versionId String
-  environment PublishingEnvironment @relation(fields: [environmentId], references: [id])
+  environment PublishingEnvironment @relation(fields: [environmentId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   environmentId String
 }
 

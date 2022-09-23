@@ -8,6 +8,7 @@ export const createPageSchema = z.object({
     }),
     slug: z.string({
       required_error: 'You have to give the site a slug.',
-    }).regex(new RegExp('^\/([a-z0-9]?)+(?:-[a-z0-9]+)*$'), 'The slug must be in the format "/like/a/slug".')
+    }).regex(new RegExp('^\/([a-z0-9]?)+(?:-[a-z0-9]+)*$'), 'The slug must be in the format "/like/a/slug".'),
+    parentId: z.string().uuid({ message: 'The parent ID has to be defined as a valid ID.' }).optional()
   })
 });

@@ -1,0 +1,22 @@
+BEGIN TRY
+
+BEGIN TRAN;
+
+-- DropForeignKey
+ALTER TABLE [dbo].[PageLayout] DROP CONSTRAINT [PageLayout_pageId_fkey];
+
+-- AddForeignKey
+ALTER TABLE [dbo].[PageLayout] ADD CONSTRAINT [PageLayout_pageId_fkey] FOREIGN KEY ([pageId]) REFERENCES [dbo].[Page]([id]) ON DELETE CASCADE ON UPDATE CASCADE;
+
+COMMIT TRAN;
+
+END TRY
+BEGIN CATCH
+
+IF @@TRANCOUNT > 0
+BEGIN
+    ROLLBACK TRAN;
+END;
+THROW
+
+END CATCH
