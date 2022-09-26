@@ -13,6 +13,8 @@ model PublishingEnvironment {
   key String @unique
   contentVersionPublications ContentBlockVariantVersionPublication[]
   layoutVersionPublications PageLayoutVersionPublication[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt @default(now())
 }
 
 model Site {
@@ -21,18 +23,23 @@ model Site {
   key String @unique
   pages Page[]
   contentBlockVariants ContentBlockVariantOnSite[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt @default(now())
 }
 
 model Page {
   id String @id @default(uuid())
   title String
   slug String
+  path String
   children Page[] @relation("children")
   parent Page? @relation("children", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   parentId String? @map("pageId")
   site Site @relation(fields: [siteId], references: [id])
   siteId String
   layouts PageLayout[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt @default(now())
 }
 
 model PageLayout {
@@ -41,6 +48,8 @@ model PageLayout {
   page Page @relation(fields: [pageId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   pageId String
   versions PageLayoutVersion[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt @default(now())
 }
 
 model PageLayoutVersion {
@@ -49,6 +58,8 @@ model PageLayoutVersion {
   layout PageLayout @relation(fields: [pageLayoutId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   pageLayoutId String
   publications PageLayoutVersionPublication[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt @default(now())
 }
 
 model PageLayoutVersionPublication {
@@ -57,6 +68,8 @@ model PageLayoutVersionPublication {
   versionId String
   environment PublishingEnvironment @relation(fields: [environmentId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   environmentId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt @default(now())
 }
 
 model ContentBlock {
@@ -64,6 +77,8 @@ model ContentBlock {
   name String
   type String
   variants ContentBlockVariant[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt @default(now())
 }
 
 model ContentBlockVariant {
@@ -73,6 +88,8 @@ model ContentBlockVariant {
   contentBlockId String
   versions ContentBlockVariantVersion[]
   sites ContentBlockVariantOnSite[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt @default(now())
 }
 
 model ContentBlockVariantOnSite {
@@ -81,6 +98,8 @@ model ContentBlockVariantOnSite {
   variantId String
   site Site @relation(fields: [siteId], references: [id])
   siteId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt @default(now())
 }
 
 model ContentBlockVariantVersion {
@@ -90,6 +109,8 @@ model ContentBlockVariantVersion {
   variant ContentBlockVariant @relation(fields: [contentBlockVariantId], references: [id])
   contentBlockVariantId String
   publications ContentBlockVariantVersionPublication[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt @default(now())
 }
 
 model ContentBlockVariantVersionPublication {
@@ -98,4 +119,6 @@ model ContentBlockVariantVersionPublication {
   versionId String
   environment PublishingEnvironment @relation(fields: [environmentId], references: [id])
   environmentId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt @default(now())
 }

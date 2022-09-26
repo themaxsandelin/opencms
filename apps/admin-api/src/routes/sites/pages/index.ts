@@ -1,6 +1,6 @@
 // Dependencies
 import { Router, Request, Response, NextFunction } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 
 // Routers
 import LayoutRouter from './layouts';
@@ -19,40 +19,52 @@ const router = Router({ mergeParams: true });
 
 router.get('/', async (req: Request, res: Response) => {
   try {
-    let query;
-    if (req.query.all) {
-      query = {
-        where: {
-          siteId: req.body.site.id,
-        },
-        select: {
-          id: true,
-          title: true,
-          slug: true,
-          parentId: true
-        }
+    const { search } = req.query;
+
+    const query: Prisma.PageFindManyArgs = {
+      where: {
+        siteId: req.body.site.id,
+      },
+      select: {
+        id: true,
+        title: true,
+        slug: true,
+        path: true,
+        createdAt: true,
+        updatedAt: true,
+        parentId: true
       }
-    } else {
-      query = {
-        where: {
-          siteId: req.body.site.id,
-          parentId: null,
-        },
+    };
+    if (req.query.relational) {
+      query.where.parentId = null;
+      delete query.select.parentId;
+      query.select.children = {
         select: {
           id: true,
           title: true,
           slug: true,
-          children: {
-            select: {
-              id: true,
-              title: true,
-              slug: true,
-            }
-          }
+          path: true,
+          createdAt: true,
+          updatedAt: true
         }
       };
     }
+    if (search) {
+      query.where.OR = [
+        {
+          title: {
+            contains: (search as string)
+          }
+        },
+        {
+          slug: {
+            contains: (search as string)
+          }
+        }
+      ];
+    }
     const pages = await prisma.page.findMany(query);
+
     res.json(pages);
   } catch (error) {
     console.error(error);
@@ -62,12 +74,12 @@ router.get('/', async (req: Request, res: Response) => {
 
 router.post('/', validateRequest(createPageSchema), async (req: Request, res: Response) => {
   try {
-    const { title, slug, parentId } = req.body;
+    const { title, slug, parentId, site } = req.body;
 
     const existingPageBySlug = await prisma.page.findFirst({
       where: {
         slug,
-        siteId: req.body.site.id
+        siteId: site.id
       }
     });
     if (existingPageBySlug) {
@@ -98,11 +110,12 @@ router.post('/', validateRequest(createPageSchema), async (req: Request, res: Re
       data: {
         title,
         slug,
-        siteId: req.body.site.id,
+        path: `${parentPage ? parentPage.path : ''}${slug}`,
+        siteId: site.id,
         parentId: parentPage ? parentPage.id : null
       }
     });
-    res.json(page);
+    res.status(201).json(page);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: JSON.stringify(error) });
@@ -120,11 +133,17 @@ router.use('/:pageId', async (req: Request, res: Response, next: NextFunction) =
         id: true,
         title: true,
         slug: true,
+        path: true,
+        createdAt: true,
+        updatedAt: true,
         children: {
           select: {
             id: true,
             title: true,
-            slug: true
+            slug: true,
+            path: true,
+            createdAt: true,
+            updatedAt: true,
           }
         }
       }
