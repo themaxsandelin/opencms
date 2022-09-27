@@ -24,6 +24,8 @@ router.get('/', async (req: Request, res: Response) => {
       select: {
         id: true,
         name: true,
+        createdAt: true,
+        updatedAt: true,
         sites: {
           select: {
             siteId: true
