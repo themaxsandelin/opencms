@@ -1,6 +1,6 @@
 // Dependencies
 import { Router, Request, Response, NextFunction } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma, ContentBlock } from '@prisma/client';
 
 // Routers
 import VariantRouter from './variants';
@@ -16,7 +16,15 @@ const router = Router();
 
 router.get('/', async (req: Request, res: Response) => {
   try {
-    const contentBlocks = await prisma.contentBlock.findMany();
+    const { type } = req.query;
+
+    const query: Prisma.ContentBlockFindManyArgs = {};
+    if (type) {
+      query.where = {
+        type: (type as string)
+      };
+    }
+    const contentBlocks = await prisma.contentBlock.findMany(query);
     return res.json(contentBlocks);
   } catch (error) {
     res.status(500).json({ error: JSON.stringify(error) });
@@ -25,14 +33,50 @@ router.get('/', async (req: Request, res: Response) => {
 
 router.post('/', validateRequest(createContentBlockSchema), async (req: Request, res: Response) => {
   try {
-    const { name, type } = req.body;
+    const { name, type, parentIds } = req.body;
+
+    const parentType = type === 'question' ? 'question-category' : null;
+    let parents: Array<ContentBlock> = [];
+    if (parentIds.length && parentType) {
+      try {
+        parents = await Promise.all(
+          parentIds.map(async (parentId: string) => {
+            const parent = await prisma.contentBlock.findFirst({
+              where: {
+                id: parentId,
+                type: parentType
+              }
+            });
+            if (!parent) {
+              throw new Error(`Could not find ${parentType} content block by ID ${parentId}.`);
+            }
+            return parent;
+          })
+        );
+      } catch (error) {
+        return res.status(400).json({ error: error.message });
+      }
+    }
+
     const contentBlock = await prisma.contentBlock.create({
       data: {
         name,
         type
       }
     });
-    return res.json(contentBlock);
+
+    if (parents.length) {
+      await Promise.all(
+        parents.map(parent => prisma.childContentBlock.create({
+          data: {
+            parentId: parent.id,
+            childId: contentBlock.id
+          }
+        }))
+      );
+    }
+
+    res.json(contentBlock);
   } catch (error) {
     res.status(500).json({ error: JSON.stringify(error) });
   }

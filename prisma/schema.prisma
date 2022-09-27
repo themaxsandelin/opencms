@@ -76,7 +76,19 @@ model ContentBlock {
   id String @id @default(uuid())
   name String
   type String
+  children ChildContentBlock[] @relation("parentContentBlock")
+  parents ChildContentBlock[] @relation("childContentBlock")
   variants ContentBlockVariant[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt @default(now())
+}
+
+model ChildContentBlock {
+  id String @id @default(uuid())
+  parent ContentBlock @relation("parentContentBlock", fields: [parentId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  parentId String
+  child ContentBlock @relation("childContentBlock", fields: [childId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  childId String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt @default(now())
 }

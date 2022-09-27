@@ -6,8 +6,9 @@ export const createContentBlockSchema = z.object({
     name: z.string({
       required_error: 'You have to give the content block a name.'
     }),
-    type: z.string({
+    type: z.enum(['question', 'question-category'], {
       required_error: 'You have to give the content block a type.'
-    })
+    }),
+    parentIds: z.array(z.string().uuid('The parent ID have to be valid ID strings.')).optional()
   })
 });
