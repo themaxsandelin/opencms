@@ -37,7 +37,7 @@ router.post('/', validateRequest(createContentBlockSchema), async (req: Request,
 
     const parentType = type === 'question' ? 'question-category' : null;
     let parents: Array<ContentBlock> = [];
-    if (parentIds.length && parentType) {
+    if (parentIds && parentIds.length && parentType) {
       try {
         parents = await Promise.all(
           parentIds.map(async (parentId: string) => {
@@ -78,6 +78,7 @@ router.post('/', validateRequest(createContentBlockSchema), async (req: Request,
 
     res.json(contentBlock);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: JSON.stringify(error) });
   }
 });
