@@ -85,11 +85,17 @@ router.post('/', validateRequest(createContentBlockSchema), async (req: Request,
 
 router.use('/:blockId', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const contentBlock = await prisma.contentBlock.findFirst({
+    const { type } = req.query;
+    const query: Prisma.ContentBlockFindManyArgs = {
       where: {
         id: req.params.blockId
       }
-    });
+    };
+    if (type) {
+      query.where.type = (type as string);
+    }
+
+    const contentBlock = await prisma.contentBlock.findFirst(query);
     if (!contentBlock) {
       return res.status(404).json({ error: 'No content block found.' });
     }
@@ -97,9 +103,21 @@ router.use('/:blockId', async (req: Request, res: Response, next: NextFunction) 
     req.body.contentBlock = contentBlock;
     next();
   } catch (error) {
-    res.status(500).json({ error: JSON.stringify(error) });
+    console.error('Server error', error);
+    res.status(500).json({ error: error.message });
   }
 });
+
+router.get('/:blockId', (req: Request, res: Response) => {
+  try {
+    const { contentBlock } = req.body;
+    res.json(contentBlock);
+  } catch (error) {
+    console.error('Server error', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 router.use('/:blockId/variants', VariantRouter);
 
 export default router;
