@@ -43,3 +43,23 @@ export const versionPublishSchema = z.object({
     }).uuid('The environment has to be defined by ID as a UUID string.'),
   })
 });
+
+export const createQuestionCategoryVersionSchema = z.object({
+  body: baseBody.extend({
+    content: z.object({
+      name: z.string({
+        required_error: 'You have to give the category a name.'
+      })
+    })
+  })
+});
+
+export const patchQuestionCategoryVersionSchema = z.object({
+  body: z.object({
+    content: z.object({
+      name: z.string({
+        required_error: 'You have to give the category a name.'
+      })
+    })
+  })
+});
