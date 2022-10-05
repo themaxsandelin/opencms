@@ -16,9 +16,8 @@ router.get('/', async (req: Request, res: Response) => {
     const publishingEnvironments = await prisma.publishingEnvironment.findMany();
     res.json(publishingEnvironments);
   } catch (error) {
-    res.status(500).json({
-      error: (error as any).message,
-    });
+    console.error(error);
+    res.status(500).json({ error: error.message });
   }
 });
 
@@ -40,7 +39,8 @@ router.post('/', validateRequest(createPublishingEnvironmentSchema), async (req:
         return res.status(400).json({ error: 'The key is already being used by a different environment.' });
       }
     }
-    res.status(500).json({ error: JSON.stringify(error) });
+    console.error(error);
+    res.status(500).json({ error: error.message });
   }
 });
 
@@ -58,7 +58,8 @@ router.use('/:id', async (req: Request, res: Response, next: NextFunction) => {
     req.body.publishingEnvironment = publishingEnvironment;
     next();
   } catch (error) {
-    res.status(500).json({ error: JSON.stringify(error) });
+    console.error(error);
+    res.status(500).json({ error: error.message });
   }
 });
 
@@ -75,7 +76,8 @@ router.delete('/:id', async (req: Request, res: Response) => {
     });
     res.json({ deleted: true });
   } catch (error) {
-    res.status(500).json({ error: JSON.stringify(error) });
+    console.error(error);
+    res.status(500).json({ error: error.message });
   }
 });
 
