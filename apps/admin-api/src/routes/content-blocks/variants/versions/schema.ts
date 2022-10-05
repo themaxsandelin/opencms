@@ -13,9 +13,24 @@ export const createQuestionVersionSchema = z.object({
       question: z.string({
         required_error: 'You have to define the question.'
       }),
-      answer: z.string({
-        required_error: 'You have to define the answer.'
+      // TODO: Fix validation of answer based on the content from the article editor. (Object -> Array of objects.)
+      // answer: z.object({
+      //   blocks: z.array(z.object({}))
+      // }),
+    })
+  })
+});
+
+export const patchQuestionVersionSchema = z.object({
+  body: z.object({
+    content: z.object({
+      question: z.string({
+        required_error: 'You have to define the question.'
       }),
+      // TODO: Fix validation of answer based on the content from the article editor. (Object -> Array of objects.)
+      // answer: z.object({
+      //   blocks: z.array(z.object({}))
+      // }),
     })
   })
 });

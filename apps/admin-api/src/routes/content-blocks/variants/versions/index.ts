@@ -3,18 +3,41 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
 
 // Utils
-import { validateVersionCreationRequest, validateVersionPublicationRequest } from './validate';
+import { validateVersionCreationRequest, validateVersionPatchRequest, validateVersionPublicationRequest } from './validate';
 
 const prisma = new PrismaClient();
 const router = Router({ mergeParams: true });
 
 router.get('/', async (req: Request, res: Response) => {
   try {
+    const { locale } = req.query;
     const { contentBlockVariant } = req.body;
 
     const versions = await prisma.contentBlockVariantVersion.findMany({
       where: {
-        contentBlockVariantId: contentBlockVariant.id
+        contentBlockVariantId: contentBlockVariant.id,
+        locale: locale ? (locale as string) : {
+          not: null
+        }
+      },
+      select: {
+        id: true,
+        content: true,
+        locale: true,
+        createdAt: true,
+        updatedAt: true,
+        publications: {
+          select: {
+            createdAt: true,
+            updatedAt: true,
+            environment: {
+              select: {
+                name: true,
+                key: true
+              }
+            }
+          }
+        }
       }
     });
     res.json(
@@ -24,7 +47,8 @@ router.get('/', async (req: Request, res: Response) => {
       }))
     );
   } catch (error) {
-    res.status(500).json({ error: JSON.stringify(error) });
+    console.error(error);
+    res.status(500).json({ error: error.message });
   }
 });
 
@@ -43,7 +67,8 @@ router.post('/', validateVersionCreationRequest, async (req: Request, res: Respo
     version.content = JSON.parse(version.content);
     return res.json(version);
   } catch (error) {
-    res.status(500).json({ error: JSON.stringify(error) });
+    console.error(error);
+    res.status(500).json({ error: error.message });
   }
 });
 
@@ -62,12 +87,40 @@ router.use('/:versionId', async (req: Request, res: Response, next: NextFunction
     req.body.contentBlockVariantVersion = contentBlockVariantVersion;
     next();
   } catch (error) {
-    res.status(500).json({ error: JSON.stringify(error) });
+    console.error(error);
+    res.status(500).json({ error: error.message });
   }
 });
 
 router.get('/:versionId', async (req: Request, res: Response) => {
-  res.json(req.body.contentBlockVariantVersion);
+  try {
+    const { contentBlockVariantVersion } = req.body;
+
+    res.json(contentBlockVariantVersion);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.patch('/:versionId', validateVersionPatchRequest, async (req: Request, res: Response) => {
+  try {
+    const { content, contentBlockVariantVersion } = req.body;
+
+    await prisma.contentBlockVariantVersion.update({
+      data: {
+        content: JSON.stringify(content),
+      },
+      where: {
+        id: contentBlockVariantVersion.id
+      }
+    });
+
+    res.json({ content });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message });
+  }
 });
 
 router.post('/:versionId/publish', validateVersionPublicationRequest(), async (req: Request, res: Response) => {
@@ -122,7 +175,8 @@ router.post('/:versionId/publish', validateVersionPublicationRequest(), async (r
 
     res.json({ success: true });
   } catch (error) {
-    res.status(500).json({ error: JSON.stringify(error) });
+    console.error(error);
+    res.status(500).json({ error: error.message });
   }
 });
 

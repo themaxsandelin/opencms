@@ -5,12 +5,20 @@ import { Request, Response, NextFunction } from 'express';
 import { validateRequest } from '@open-cms/utils';
 
 // Validation schemas
-import { createQuestionVersionSchema, versionPublishSchema } from './schema';
+import { createQuestionVersionSchema, patchQuestionVersionSchema, versionPublishSchema } from './schema';
 
 export function validateVersionCreationRequest(req: Request, res: Response, next: NextFunction) {
   const { contentBlock } = req.body;
   if (contentBlock.type === 'question') {
     return validateRequest(createQuestionVersionSchema)(req, res, next);
+  }
+  return res.status(400).json({ error: 'Unknown content block type.' });
+}
+
+export function validateVersionPatchRequest(req: Request, res: Response, next: NextFunction) {
+  const { contentBlock } = req.body;
+  if (contentBlock.type === 'question') {
+    return validateRequest(patchQuestionVersionSchema)(req, res, next);
   }
   return res.status(400).json({ error: 'Unknown content block type.' });
 }

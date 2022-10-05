@@ -82,9 +82,39 @@ router.use('/:variantId', async (req: Request, res: Response, next: NextFunction
     req.body.contentBlockVariant = variant;
     next();
   } catch (error) {
-    res.status(500).json({ error: JSON.stringify(error) });
+    console.error(error);
+    res.status(500).json({ error: error.message });
   }
 });
+
+router.get('/:variantId', async (req: Request, res: Response) => {
+  try {
+    const { contentBlockVariant } = req.body;
+
+    // TODO: Incorporate the user here to determine the right version to show based on who's signed in.
+    // I.e. we need to track who updated the version.
+    const latestVersion = await prisma.contentBlockVariantVersion.findFirst({
+      where: {
+        contentBlockVariantId: contentBlockVariant.id
+      },
+      orderBy: {
+        updatedAt: 'desc'
+      }
+    });
+    if (latestVersion) {
+      latestVersion.content = JSON.parse(latestVersion.content);
+    }
+
+    res.json({
+      ...contentBlockVariant,
+      latestVersion: latestVersion || null
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 router.use('/:variantId/versions', VersionRouter);
 
 export default router;
