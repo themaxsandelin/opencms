@@ -16,7 +16,7 @@ const router = Router();
 
 router.get('/', async (req: Request, res: Response) => {
   try {
-    const { type } = req.query;
+    const { type, search } = req.query;
 
     const query: Prisma.ContentBlockFindManyArgs = {
       include: {
@@ -53,6 +53,15 @@ router.get('/', async (req: Request, res: Response) => {
         type: (type as string)
       };
     }
+    if (search) {
+      query.where.OR = [
+        {
+          name: {
+            contains: (search as string)
+          }
+        }
+      ];
+    }
     const contentBlocks = await prisma.contentBlock.findMany(query);
 
     return res.json(
@@ -69,7 +78,7 @@ router.get('/', async (req: Request, res: Response) => {
 
 router.post('/', validateRequest(createContentBlockSchema), async (req: Request, res: Response) => {
   try {
-    const { name, type, parentIds } = req.body;
+    const { name, type, parentIds, childIds } = req.body;
 
     const parentType = type === 'question' ? 'question-category' : null;
     let parents: Array<ContentBlock> = [];
@@ -94,6 +103,30 @@ router.post('/', validateRequest(createContentBlockSchema), async (req: Request,
       }
     }
 
+    const childType = type === 'question-category' ? 'question' : null;
+    let children: Array<ContentBlock> = [];
+    if (childIds && childIds.length && childType) {
+      try {
+        children = await Promise.all(
+          childIds.map(async (childId: string) => {
+            const child = await prisma.contentBlock.findFirst({
+              where: {
+                id: childId,
+                type: childType
+              }
+            });
+            if (!child) {
+              throw new Error(`Could not find ${childType} content block by ID ${childId}.`);
+            }
+            return child;
+          })
+        );
+      } catch (error) {
+        return res.status(400).json({ error: error.message });
+      }
+    }
+
+
     const contentBlock = await prisma.contentBlock.create({
       data: {
         name,
@@ -107,6 +140,17 @@ router.post('/', validateRequest(createContentBlockSchema), async (req: Request,
           data: {
             parentId: parent.id,
             childId: contentBlock.id
+          }
+        }))
+      );
+    }
+
+    if (children.length) {
+      await Promise.all(
+        children.map(child => prisma.childContentBlock.create({
+          data: {
+            parentId: contentBlock.id,
+            childId: child.id
           }
         }))
       );
@@ -156,14 +200,15 @@ router.get('/:blockId', (req: Request, res: Response) => {
 
 router.patch('/:blockId', validateRequest(patchContentBlockSchema), async (req: Request, res: Response) => {
   try {
-    const { name, parentIds, contentBlock } = req.body;
+    const { name, contentBlock } = req.body;
+    const childIds = req.body.childIds || [];
+    const parentIds = req.body.parentIds || [];
 
     const existingParentRelations = await prisma.childContentBlock.findMany({
       where: {
         childId: contentBlock.id
       }
     });
-
     const existingParentIds = existingParentRelations.map(relationship => relationship.parentId);
     const newParentIds = parentIds.filter((parentId: string) => !existingParentIds.includes(parentId));
     const deleteExistinParentIds = existingParentIds.filter((parentId: string) => !parentIds.includes(parentId));
@@ -211,6 +256,63 @@ router.patch('/:blockId', validateRequest(patchContentBlockSchema), async (req: 
           data: {
             parentId: parent.id,
             childId: contentBlock.id
+          }
+        }))
+      );
+    }
+
+    const existingChildRelations = await prisma.childContentBlock.findMany({
+      where: {
+        parentId: contentBlock.id
+      }
+    });
+    const existingChildIds = existingChildRelations.map(relationship => relationship.childId);
+    const newChildIds = childIds.filter((childId: string) => !existingChildIds.includes(childId));
+    const deleteExistinChildIds = existingChildIds.filter((childId: string) => !childIds.includes(childId));
+
+    // First, delete any old relationships that are not included in the request body.
+    await Promise.all(
+      deleteExistinChildIds.map(async (childId: string) => {
+        const item = existingChildRelations.find(item => item.childId === childId);
+        await prisma.childContentBlock.delete({
+          where: {
+            id: item.id
+          }
+        });
+      })
+    );
+
+    // Secondly, make sure to check that the new child IDs all exist.
+    let newChildren: Array<ContentBlock> = [];
+    if (newChildIds.length) {
+      const childType = contentBlock.type === 'question-category' ? 'question' : null;
+      if (childType) {
+        try {
+          newChildren = await Promise.all(
+            newChildIds.map(async (childId: string) => {
+              const parent = await prisma.contentBlock.findFirst({
+                where: {
+                  id: childId,
+                  type: childType
+                }
+              });
+              if (!parent) {
+                throw new Error(`Could not find ${childType} content block by ID ${childId}.`);
+              }
+              return parent;
+            })
+          );
+        } catch (error) {
+          return res.status(400).json({ error: error.message });
+        }
+      }
+
+      // Then finally create the new child relationships.
+      await Promise.all(
+        newChildren.map(child => prisma.childContentBlock.create({
+          data: {
+            parentId: contentBlock.id,
+            childId: child.id
           }
         }))
       );
