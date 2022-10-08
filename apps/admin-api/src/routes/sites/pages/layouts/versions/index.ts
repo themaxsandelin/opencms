@@ -19,7 +19,8 @@ router.get('/', async (req: Request, res: Response) => {
         pageLayoutId: pageLayout.id
       }
     });
-    return res.json(versions);
+
+    return res.json({ data: versions });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: (error as any).message });
@@ -35,7 +36,8 @@ router.post('/', validateRequest(createVersionSchema), async (req: Request, res:
         pageLayoutId: pageLayout.id
       }
     });
-    res.json(version);
+
+    res.json({ data: version });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: (error as any).message });
@@ -65,7 +67,7 @@ router.use('/:versionId', async (req: Request, res: Response, next: NextFunction
 router.get('/:versionId', async (req: Request, res: Response) => {
   try {
     const { pageLayoutVersion } = req.body;
-    res.json(pageLayoutVersion);
+    res.json({ data: pageLayoutVersion });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: (error as any).message });
@@ -120,7 +122,7 @@ router.post('/:versionId/publish', validateRequest(publishVersionSchema), async 
       });
     }
 
-    res.json({ success: true });
+    res.json({ data: { published: true } });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: (error as any).message });

@@ -20,7 +20,7 @@ const router = Router();
 router.get('/', async (req: Request, res: Response) => {
   try {
     const sites = await prisma.site.findMany();
-    res.json(sites);
+    res.json({ data: sites });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });
@@ -33,7 +33,7 @@ router.post('/', validateRequest(createSiteSchema), async (req: Request, res: Re
     const site = await prisma.site.create({
       data: { name, key }
     });
-    res.json(site);
+    res.json({ data: site });
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       if (error.code === 'P2002') {
@@ -73,7 +73,7 @@ router.get('/:siteId', (req: Request, res: Response) => {
   try {
     const { site } = req.body;
     // Pass along the already fetched site from the middleware
-    res.json(site);
+    res.json({ data: site });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });
@@ -85,7 +85,7 @@ router.delete('/:siteId', async (req: Request, res: Response) => {
     const { site } = req.body;
     await deleteSite(site);
 
-    res.json({ success: true });
+    res.json({ data: { deleted: true } });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });

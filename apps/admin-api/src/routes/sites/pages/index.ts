@@ -65,7 +65,7 @@ router.get('/', async (req: Request, res: Response) => {
     }
     const pages = await prisma.page.findMany(query);
 
-    res.json(pages);
+    res.json({ data: pages });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: JSON.stringify(error) });
@@ -115,7 +115,8 @@ router.post('/', validateRequest(createPageSchema), async (req: Request, res: Re
         parentId: parentPage ? parentPage.id : null
       }
     });
-    res.status(201).json(page);
+
+    res.status(201).json({ data: page });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: JSON.stringify(error) });
@@ -164,7 +165,7 @@ router.get('/:pageId', async (req: Request, res: Response) => {
   try {
     const { page } = req.body;
 
-    return res.json(page);
+    return res.json({ data: page });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: JSON.stringify(error) });
@@ -178,7 +179,7 @@ router.delete('/:pageId', async (req: Request, res: Response) => {
 
     await deletePage(page, page, (deleteChildren ? true : false));
 
-    return res.json({ success: true });
+    return res.json({ data: { deleted: true } });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: JSON.stringify(error) });

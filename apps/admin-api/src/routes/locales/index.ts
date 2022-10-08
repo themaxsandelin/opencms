@@ -7,7 +7,9 @@ import { locales } from '@open-cms/utils';
 const router = Router({ mergeParams: true });
 
 router.get('/', (req: Request, res: Response) => {
-  res.json(locales);
+  res.json({
+    data: locales
+  });
 });
 
 export default router;

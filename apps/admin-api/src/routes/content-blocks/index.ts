@@ -64,13 +64,13 @@ router.get('/', async (req: Request, res: Response) => {
     }
     const contentBlocks = await prisma.contentBlock.findMany(query);
 
-    return res.json(
-      contentBlocks.map((contentBlock: any) => {
+    return res.json({
+      data: contentBlocks.map((contentBlock: any) => {
         contentBlock.parents = contentBlock.parents.map(parentBlock => parentBlock.parent);
         contentBlock.children = contentBlock.children.map(childBlock => childBlock.child);
         return contentBlock;
       })
-    );
+    });
   } catch (error) {
     res.status(500).json({ error: JSON.stringify(error) });
   }
@@ -156,7 +156,7 @@ router.post('/', validateRequest(createContentBlockSchema), async (req: Request,
       );
     }
 
-    res.json(contentBlock);
+    res.json({ data: contentBlock });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: JSON.stringify(error) });
@@ -191,7 +191,7 @@ router.use('/:blockId', async (req: Request, res: Response, next: NextFunction) 
 router.get('/:blockId', (req: Request, res: Response) => {
   try {
     const { contentBlock } = req.body;
-    res.json(contentBlock);
+    res.json({ data: contentBlock });
   } catch (error) {
     console.error('Server error', error);
     res.status(500).json({ error: error.message });
@@ -328,7 +328,7 @@ router.patch('/:blockId', validateRequest(patchContentBlockSchema), async (req: 
       }
     });
 
-    res.json({ success: true });
+    res.json({ data: { updated: true } });
   } catch (error) {
     console.error('Server error', error);
     res.status(500).json({ error: error.message });

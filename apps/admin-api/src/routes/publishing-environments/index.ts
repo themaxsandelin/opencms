@@ -14,7 +14,7 @@ const router = Router();
 router.get('/', async (req: Request, res: Response) => {
   try {
     const publishingEnvironments = await prisma.publishingEnvironment.findMany();
-    res.json(publishingEnvironments);
+    res.json({ data: publishingEnvironments });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });
@@ -32,7 +32,7 @@ router.post('/', validateRequest(createPublishingEnvironmentSchema), async (req:
       }
     });
 
-    res.json(publishingEnvironment);
+    res.json({ data: publishingEnvironment });
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       if (error.code === 'P2002') {
@@ -64,7 +64,13 @@ router.use('/:id', async (req: Request, res: Response, next: NextFunction) => {
 });
 
 router.get('/:id', async (req: Request, res: Response) => {
-  res.json(req.body.publishingEnvironment);
+  try {
+    const { publishingEnvironment } = req.body;
+    res.json({ data: publishingEnvironment });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message });
+  }
 });
 
 router.delete('/:id', async (req: Request, res: Response) => {
@@ -74,7 +80,7 @@ router.delete('/:id', async (req: Request, res: Response) => {
         id: req.body.publishingEnvironment.id
       }
     });
-    res.json({ deleted: true });
+    res.json({ data: { deleted: true } });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });

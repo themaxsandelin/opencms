@@ -22,7 +22,8 @@ router.get('/', async (req: Request, res: Response) => {
         pageId: page.id
       }
     });
-    res.json(layouts);
+
+    res.json({ data: layouts });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: JSON.stringify(error) });
@@ -39,7 +40,8 @@ router.post('/', validateRequest(createLayoutSchema), async (req: Request, res: 
         pageId: page.id
       }
     });
-    res.json(pageLayout);
+
+    res.json({ data: pageLayout });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: JSON.stringify(error) });
@@ -69,7 +71,7 @@ router.use('/:layoutId', async (req: Request, res: Response, next: NextFunction)
 router.get('/:layoutId', async (req: Request, res: Response) => {
   try {
     const { pageLayout } = req.body;
-    res.json(pageLayout);
+    res.json({ data: pageLayout });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: JSON.stringify(error) });

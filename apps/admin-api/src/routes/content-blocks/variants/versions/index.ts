@@ -40,12 +40,12 @@ router.get('/', async (req: Request, res: Response) => {
         }
       }
     });
-    res.json(
-      versions.map((version) => ({
+    res.json({
+      data: versions.map((version) => ({
         ...version,
         content: JSON.parse(version.content)
       }))
-    );
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });
@@ -65,7 +65,7 @@ router.post('/', validateVersionCreationRequest, async (req: Request, res: Respo
     });
 
     version.content = JSON.parse(version.content);
-    return res.json(version);
+    return res.json({ data: version });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });
@@ -96,7 +96,7 @@ router.get('/:versionId', async (req: Request, res: Response) => {
   try {
     const { contentBlockVariantVersion } = req.body;
 
-    res.json(contentBlockVariantVersion);
+    res.json({ data: contentBlockVariantVersion });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });
@@ -116,7 +116,7 @@ router.patch('/:versionId', validateVersionPatchRequest, async (req: Request, re
       }
     });
 
-    res.json({ content });
+    res.json({ data: { updated: true } });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });
@@ -173,7 +173,7 @@ router.post('/:versionId/publish', validateVersionPublicationRequest(), async (r
       });
     }
 
-    res.json({ success: true });
+    res.json({ data: { published: true } });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });

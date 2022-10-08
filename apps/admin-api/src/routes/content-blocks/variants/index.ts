@@ -33,7 +33,7 @@ router.get('/', async (req: Request, res: Response) => {
         }
       }
     });
-    return res.json(variants);
+    return res.json({ data: variants });
   } catch (error) {
     res.status(500).json({ error: JSON.stringify(error) });
   }
@@ -61,7 +61,7 @@ router.post('/', validateRequest(createVariantSchema), async (req: Request, res:
     }
 
     const variant = await prisma.contentBlockVariant.create(createQuery);
-    res.json(variant);
+    res.json({ data: variant });
   } catch (error) {
     res.status(500).json({ error: JSON.stringify(error) });
   }
@@ -106,8 +106,10 @@ router.get('/:variantId', async (req: Request, res: Response) => {
     }
 
     res.json({
-      ...contentBlockVariant,
-      latestVersion: latestVersion || null
+      data: {
+        ...contentBlockVariant,
+        latestVersion: latestVersion || null
+      }
     });
   } catch (error) {
     console.error(error);
