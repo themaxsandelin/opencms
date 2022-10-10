@@ -1,9 +1,10 @@
 // Dependencies
 import { Router, Request, Response, NextFunction } from 'express';
-import { PrismaClient, Prisma } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 
 // Routers
 import LayoutRouter from './layouts';
+import InstancesRouter from './instances';
 
 // Controller
 import { deletePage } from './controller';
@@ -20,106 +21,71 @@ const router = Router({ mergeParams: true });
 router.get('/', async (req: Request, res: Response) => {
   try {
     const { search } = req.query;
+    const { siteId } = req.params;
 
-    const query: Prisma.PageFindManyArgs = {
+    const pages = await prisma.page.findMany({
       where: {
-        siteId: req.body.site.id,
-      },
-      select: {
-        id: true,
-        title: true,
-        slug: true,
-        path: true,
-        createdAt: true,
-        updatedAt: true,
-        parentId: true
+        siteId,
+        name: search ? {
+          contains: (search as string)
+        } : {
+          not: null
+        }
       }
-    };
-    if (req.query.relational) {
-      query.where.parentId = null;
-      delete query.select.parentId;
-      query.select.children = {
-        select: {
-          id: true,
-          title: true,
-          slug: true,
-          path: true,
-          createdAt: true,
-          updatedAt: true
-        }
-      };
-    }
-    if (search) {
-      query.where.OR = [
-        {
-          title: {
-            contains: (search as string)
-          }
-        },
-        {
-          slug: {
-            contains: (search as string)
-          }
-        }
-      ];
-    }
-    const pages = await prisma.page.findMany(query);
+    });
 
     res.json({ data: pages });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: JSON.stringify(error) });
+    res.status(500).json({ error: error.message });
   }
 });
 
 router.post('/', validateRequest(createPageSchema), async (req: Request, res: Response) => {
   try {
-    const { title, slug, parentId, site } = req.body;
+    const { name, isFrontPage, parentId } = req.body;
+    const { siteId } = req.params;
 
-    const existingPageBySlug = await prisma.page.findFirst({
-      where: {
-        slug,
-        siteId: site.id
+    if (isFrontPage) {
+      const existingFrontPage = await prisma.page.findFirst({
+        where: {
+          isFrontPage: true,
+          siteId
+        }
+      });
+      if (existingFrontPage) {
+        return res.status(400).json({ error: 'There already exists a front page for this site.' });
       }
-    });
-    if (existingPageBySlug) {
-      return res.status(400).json({ error: `There already is a page on this site with the slug ${slug}.` });
     }
 
-    let parentPage;
+    let parent;
     if (parentId) {
-      parentPage = await prisma.page.findFirst({
+      parent = await prisma.page.findFirst({
         where: {
           id: parentId
         }
       });
-      if (!parentPage) {
-        return res.status(400).json({ error: `Could not find a page by parentId ${parentId}.` });
+      if (!parent) {
+        return res.status(400).json({ error: `Could not find a page based on the parentId ${parentId}` });
       }
-      // Make sure you can't create a child page with the slug "/"
-      if (slug === '/') {
-        return res.status(400).json({ error: 'You cannot use the root slug (\'/\') as a slug for a page with a parent.' });
-      }
-      // Make sure you can't create a child page for the root page (page with the slug "/")
-      if (parentPage.slug === '/') {
-        return res.status(400).json({ error: 'You cannot assign a page to be a child of a page with the slug \'/\'.' });
+      if (parent.isFrontPage) {
+        return res.status(400).json({ error: 'The targeted parent page is the site front page. You cannot assign a child to a site front page.' });
       }
     }
 
     const page = await prisma.page.create({
       data: {
-        title,
-        slug,
-        path: `${parentPage ? parentPage.path : ''}${slug}`,
-        siteId: site.id,
-        parentId: parentPage ? parentPage.id : null
+        name,
+        isFrontPage,
+        siteId,
+        parentId: parent ? parent.id : null
       }
     });
 
     res.status(201).json({ data: page });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: JSON.stringify(error) });
+    res.status(500).json({ error: error.message });
   }
 });
 
@@ -129,24 +95,6 @@ router.use('/:pageId', async (req: Request, res: Response, next: NextFunction) =
     const page = await prisma.page.findFirst({
       where: {
         id: pageId,
-      },
-      select: {
-        id: true,
-        title: true,
-        slug: true,
-        path: true,
-        createdAt: true,
-        updatedAt: true,
-        children: {
-          select: {
-            id: true,
-            title: true,
-            slug: true,
-            path: true,
-            createdAt: true,
-            updatedAt: true,
-          }
-        }
       }
     });
     if (!page) {
@@ -157,7 +105,7 @@ router.use('/:pageId', async (req: Request, res: Response, next: NextFunction) =
     next();
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: JSON.stringify(error) });
+    res.status(500).json({ error: error.message });
   }
 });
 
@@ -168,24 +116,23 @@ router.get('/:pageId', async (req: Request, res: Response) => {
     return res.json({ data: page });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: JSON.stringify(error) });
+    res.status(500).json({ error: error.message });
   }
 });
 
 router.delete('/:pageId', async (req: Request, res: Response) => {
   try {
-    const { deleteChildren } = req.query;
     const { page } = req.body;
-
-    await deletePage(page, page, (deleteChildren ? true : false));
+    await deletePage(page);
 
     return res.json({ data: { deleted: true } });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: JSON.stringify(error) });
+    res.status(500).json({ error: error.message });
   }
 });
 
 router.use('/:pageId/layouts', LayoutRouter);
+router.use('/:pageId/instances', InstancesRouter);
 
 export default router;

@@ -35,7 +35,8 @@ router.get('/', async (req: Request, res: Response) => {
     });
     return res.json({ data: variants });
   } catch (error) {
-    res.status(500).json({ error: JSON.stringify(error) });
+    console.error(error);
+    res.status(500).json({ error: error.message });
   }
 });
 
@@ -63,7 +64,8 @@ router.post('/', validateRequest(createVariantSchema), async (req: Request, res:
     const variant = await prisma.contentBlockVariant.create(createQuery);
     res.json({ data: variant });
   } catch (error) {
-    res.status(500).json({ error: JSON.stringify(error) });
+    console.error(error);
+    res.status(500).json({ error: error.message });
   }
 });
 

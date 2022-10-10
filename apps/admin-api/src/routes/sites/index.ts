@@ -12,7 +12,7 @@ import { deleteSite } from './controller';
 import { validateRequest } from '@open-cms/utils';
 
 // Data schema
-import { createSiteSchema } from './schema';
+import { createSiteSchema, updateSiteSchema } from './schema';
 
 const prisma = new PrismaClient();
 const router = Router();
@@ -74,6 +74,41 @@ router.get('/:siteId', (req: Request, res: Response) => {
     const { site } = req.body;
     // Pass along the already fetched site from the middleware
     res.json({ data: site });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.patch('/:siteId', validateRequest(updateSiteSchema), async (req: Request, res: Response) => {
+  try {
+    const { name, key, site } = req.body;
+    if (name || key) {
+      const query: Prisma.SiteUpdateArgs = {
+        data: {},
+        where: {
+          id: site.id
+        }
+      };
+      if (name) {
+        query.data.name = name;
+      }
+      if (key) {
+        const existingSiteWithKey = await prisma.site.findFirst({
+          where: {
+            key
+          }
+        });
+        if (existingSiteWithKey) {
+          return res.status(400).json({ error: 'The key you provided is already assigned to an existing site.' });
+        }
+        query.data.key = key;
+      }
+      await prisma.site.update(query);
+      res.json({ data: { updated: true } });
+    } else {
+      res.json({ data: { updated: false } });
+    }
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });

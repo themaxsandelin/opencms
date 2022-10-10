@@ -5,6 +5,9 @@ import { PrismaClient } from '@prisma/client';
 // Routers
 import VersionsRouter from './versions';
 
+// Controller
+import { deletePageLayout } from './controller';
+
 // Utils
 import { validateRequest } from '@open-cms/utils';
 
@@ -26,7 +29,7 @@ router.get('/', async (req: Request, res: Response) => {
     res.json({ data: layouts });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: JSON.stringify(error) });
+    res.status(500).json({ error: error.message });
   }
 });
 
@@ -44,7 +47,7 @@ router.post('/', validateRequest(createLayoutSchema), async (req: Request, res: 
     res.json({ data: pageLayout });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: JSON.stringify(error) });
+    res.status(500).json({ error: error.message });
   }
 });
 
@@ -64,7 +67,7 @@ router.use('/:layoutId', async (req: Request, res: Response, next: NextFunction)
     next();
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: JSON.stringify(error) });
+    res.status(500).json({ error: error.message });
   }
 });
 
@@ -74,7 +77,19 @@ router.get('/:layoutId', async (req: Request, res: Response) => {
     res.json({ data: pageLayout });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: JSON.stringify(error) });
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.delete('/:layoutId', async (req: Request, res: Response) => {
+  try {
+    const { pageLayout } = req.body;
+    await deletePageLayout(pageLayout);
+
+    res.json({ data: { deleted: true } });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message });
   }
 });
 

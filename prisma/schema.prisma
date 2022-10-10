@@ -13,6 +13,7 @@ model PublishingEnvironment {
   key String @unique
   contentVersionPublications ContentBlockVariantVersionPublication[]
   layoutVersionPublications PageLayoutVersionPublication[]
+  pageInstaceLayoutPublications PageInstanceLayout[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt @default(now())
 }
@@ -29,15 +30,41 @@ model Site {
 
 model Page {
   id String @id @default(uuid())
-  title String
-  slug String
-  path String
-  children Page[] @relation("children")
-  parent Page? @relation("children", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  parentId String? @map("pageId")
+  name String
+  isFrontPage Boolean @default(false)
   site Site @relation(fields: [siteId], references: [id])
   siteId String
+  parent Page? @relation("children", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  parentId String? @map("pageId")
   layouts PageLayout[]
+  instances PageInstance[]
+  children Page[] @relation("children")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt @default(now())
+}
+
+model PageInstance {
+  id String @id @default(uuid())
+  title String
+  description String?
+  slug String
+  path String
+  localeCode String
+  pageId String
+  page Page @relation(fields: [pageId], references: [id])
+  layouts PageInstanceLayout[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt @default(now())
+}
+
+model PageInstanceLayout {
+  id String @id @default(uuid())
+  pageInstance PageInstance @relation(fields: [pageInstanceId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  pageInstanceId String
+  pageLayout PageLayout @relation(fields: [pageLayoutId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  pageLayoutId String
+  publishingEnvironment PublishingEnvironment @relation(fields: [publishingEnvironmentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  publishingEnvironmentId String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt @default(now())
 }
@@ -48,6 +75,7 @@ model PageLayout {
   page Page @relation(fields: [pageId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   pageId String
   versions PageLayoutVersion[]
+  instances PageInstanceLayout[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt @default(now())
 }

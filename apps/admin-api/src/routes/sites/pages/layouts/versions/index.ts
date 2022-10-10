@@ -2,6 +2,9 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
 
+// Controller
+import { deletePageLayoutVersion } from './controller';
+
 // Utils
 import { validateRequest } from '@open-cms/utils';
 
@@ -68,6 +71,18 @@ router.get('/:versionId', async (req: Request, res: Response) => {
   try {
     const { pageLayoutVersion } = req.body;
     res.json({ data: pageLayoutVersion });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: (error as any).message });
+  }
+});
+
+router.delete('/:versionId', async (req: Request, res: Response) => {
+  try {
+    const { pageLayoutVersion } = req.body;
+    await deletePageLayoutVersion(pageLayoutVersion);
+
+    res.json({ data: { deleted: true } });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: (error as any).message });

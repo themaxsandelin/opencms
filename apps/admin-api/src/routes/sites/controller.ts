@@ -15,7 +15,7 @@ export async function deleteSite(site: Site) {
   });
   if (siteRootPages.length) {
     // Delete all pages with, including children
-    await Promise.all(siteRootPages.map(page => deletePage(page, page, true)));
+    await Promise.all(siteRootPages.map(page => deletePage(page, true)));
   }
   return prisma.site.delete({
     where: {
