@@ -13,10 +13,10 @@ const router = Router({ mergeParams: true });
 
 router.get('/', async (req: Request, res: Response) => {
   try {
-    const { pageInstanceId } = req.params;
+    const { instanceId } = req.params;
     const pageInstanceLayouts = await prisma.pageInstanceLayout.findMany({
       where: {
-        pageInstanceId
+        pageInstanceId: instanceId
       }
     });
 
