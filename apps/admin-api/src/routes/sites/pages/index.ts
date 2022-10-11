@@ -29,7 +29,7 @@ router.get('/', async (req: Request, res: Response) => {
         name: search ? {
           contains: (search as string)
         } : {
-          not: null
+          not: ''
         }
       }
     });
