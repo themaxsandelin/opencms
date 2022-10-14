@@ -96,12 +96,7 @@ router.patch('/:versionId', async (req: Request, res: Response) => {
   try {
     const { content, pageLayoutVersion } = req.body;
 
-    const publications = await prisma.pageLayoutVersionPublication.findMany({
-      where: {
-        versionId: pageLayoutVersion.id
-      }
-    });
-    if (publications.length) {
+    if (pageLayoutVersion.wasPublished) {
       return res.status(400).json({ error: 'You cannot update a page layout version that has been published to an environment.' });
     }
 
