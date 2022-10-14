@@ -83,6 +83,7 @@ model PageLayout {
 model PageLayoutVersion {
   id String @id @default(uuid())
   content String @db.NVarChar(MAX)
+  wasPublished Boolean @default(false)
   layout PageLayout @relation(fields: [pageLayoutId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   pageLayoutId String
   publications PageLayoutVersionPublication[]

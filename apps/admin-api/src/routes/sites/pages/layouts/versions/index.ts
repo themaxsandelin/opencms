@@ -9,7 +9,7 @@ import { deletePageLayoutVersion } from './controller';
 import { validateRequest } from '@open-cms/utils';
 
 // Validation schema
-import { createVersionSchema, publishVersionSchema } from './schema';
+import { publishVersionSchema } from './schema';
 
 const prisma = new PrismaClient();
 const router = Router({ mergeParams: true });
@@ -20,17 +20,32 @@ router.get('/', async (req: Request, res: Response) => {
     const versions = await prisma.pageLayoutVersion.findMany({
       where: {
         pageLayoutId: pageLayout.id
+      },
+      orderBy: {
+        updatedAt: 'desc'
+      },
+      include: {
+        publications: {
+          include: {
+            environment: true
+          }
+        }
       }
     });
 
-    return res.json({ data: versions });
+    return res.json({
+      data: versions.map(version => ({
+        ...version,
+        content: JSON.parse(version.content)
+      }))
+    });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: (error as any).message });
+    res.status(500).json({ error: error.message });
   }
 });
 
-router.post('/', validateRequest(createVersionSchema), async (req: Request, res: Response) => {
+router.post('/', async (req: Request, res: Response) => {
   try {
     const { content, pageLayout } = req.body;
     const version = await prisma.pageLayoutVersion.create({
@@ -43,7 +58,7 @@ router.post('/', validateRequest(createVersionSchema), async (req: Request, res:
     res.json({ data: version });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: (error as any).message });
+    res.status(500).json({ error: error.message });
   }
 });
 
@@ -63,7 +78,7 @@ router.use('/:versionId', async (req: Request, res: Response, next: NextFunction
     next();
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: (error as any).message });
+    res.status(500).json({ error: error.message });
   }
 });
 
@@ -73,7 +88,36 @@ router.get('/:versionId', async (req: Request, res: Response) => {
     res.json({ data: pageLayoutVersion });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: (error as any).message });
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.patch('/:versionId', async (req: Request, res: Response) => {
+  try {
+    const { content, pageLayoutVersion } = req.body;
+
+    const publications = await prisma.pageLayoutVersionPublication.findMany({
+      where: {
+        versionId: pageLayoutVersion.id
+      }
+    });
+    if (publications.length) {
+      return res.status(400).json({ error: 'You cannot update a page layout version that has been published to an environment.' });
+    }
+
+    await prisma.pageLayoutVersion.update({
+      data: {
+        content: JSON.stringify(content),
+      },
+      where: {
+        id: pageLayoutVersion.id
+      }
+    });
+
+    res.json({ data: { updated: true } });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message });
   }
 });
 
@@ -85,7 +129,7 @@ router.delete('/:versionId', async (req: Request, res: Response) => {
     res.json({ data: { deleted: true } });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: (error as any).message });
+    res.status(500).json({ error: error.message });
   }
 });
 
@@ -137,10 +181,21 @@ router.post('/:versionId/publish', validateRequest(publishVersionSchema), async 
       });
     }
 
+    if (!pageLayoutVersion.wasPublished) {
+      await prisma.pageLayoutVersion.update({
+        data: {
+          wasPublished: true
+        },
+        where: {
+          id: pageLayoutVersion.id
+        }
+      });
+    }
+
     res.json({ data: { published: true } });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: (error as any).message });
+    res.status(500).json({ error: error.message });
   }
 });
 
