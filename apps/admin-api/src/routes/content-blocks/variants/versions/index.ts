@@ -26,6 +26,9 @@ router.get('/', async (req: Request, res: Response) => {
             environment: true
           }
         }
+      },
+      orderBy: {
+        updatedAt: 'desc'
       }
     });
     res.json({
@@ -42,12 +45,13 @@ router.get('/', async (req: Request, res: Response) => {
 
 router.post('/', validateVersionCreationRequest, async (req: Request, res: Response) => {
   try {
-    const { content, locale, contentBlockVariant } = req.body;
+    const { content, locale, slug, contentBlockVariant } = req.body;
 
     const version = await prisma.contentBlockVariantVersion.create({
       data: {
         content: JSON.stringify(content),
         locale,
+        slug,
         contentBlockVariantId: contentBlockVariant.id
       }
     });
@@ -93,7 +97,7 @@ router.get('/:versionId', async (req: Request, res: Response) => {
 
 router.patch('/:versionId', validateVersionPatchRequest, async (req: Request, res: Response) => {
   try {
-    const { content, contentBlockVariantVersion } = req.body;
+    const { content, slug, contentBlockVariantVersion } = req.body;
 
     if (contentBlockVariantVersion.wasPublished) {
       return res.status(400).json({ error: 'You cannot update a content block variant version that has been published.' });
@@ -102,6 +106,7 @@ router.patch('/:versionId', validateVersionPatchRequest, async (req: Request, re
     await prisma.contentBlockVariantVersion.update({
       data: {
         content: JSON.stringify(content),
+        slug
       },
       where: {
         id: contentBlockVariantVersion.id
@@ -132,6 +137,7 @@ router.post('/:versionId/publish', validateVersionPublicationRequest(), async (r
       where: {
         environmentId: publishingEnvironment.id,
         version: {
+          locale: contentBlockVariantVersion.locale,
           variant: {
             contentBlock: {
               id: contentBlock.id

@@ -4,7 +4,10 @@ import { z } from 'zod';
 const baseBody = z.object({
   locale: z.string({
     required_error: 'You have to assign the content version a locale code.'
-  })
+  }),
+  slug: z.string({
+    invalid_type_error: 'The slug has to be a string.'
+  }).regex(/^\/([a-z0-9]?)+(?:-[a-z0-9]+)*$/gm, 'The slug must be in the format /like-a-slug.').optional()
 });
 
 export const createQuestionVersionSchema = z.object({
@@ -56,6 +59,9 @@ export const createQuestionCategoryVersionSchema = z.object({
 
 export const patchQuestionCategoryVersionSchema = z.object({
   body: z.object({
+    slug: z.string({
+      invalid_type_error: 'The slug has to be a string.'
+    }).regex(/^\/([a-z0-9]?)+(?:-[a-z0-9]+)*$/gm, 'The slug must be in the format /like-a-slug.').optional(),
     content: z.object({
       name: z.string({
         required_error: 'You have to give the category a name.'
