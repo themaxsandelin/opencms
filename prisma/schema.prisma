@@ -148,6 +148,7 @@ model ContentBlockVariantVersion {
   id String @id @default(uuid())
   content String @db.NVarChar(MAX)
   locale String
+  wasPublished Boolean @default(false)
   variant ContentBlockVariant @relation(fields: [contentBlockVariantId], references: [id])
   contentBlockVariantId String
   publications ContentBlockVariantVersionPublication[]

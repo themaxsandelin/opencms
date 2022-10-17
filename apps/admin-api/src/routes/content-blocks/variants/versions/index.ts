@@ -20,22 +20,10 @@ router.get('/', async (req: Request, res: Response) => {
           not: null
         }
       },
-      select: {
-        id: true,
-        content: true,
-        locale: true,
-        createdAt: true,
-        updatedAt: true,
+      include: {
         publications: {
-          select: {
-            createdAt: true,
-            updatedAt: true,
-            environment: {
-              select: {
-                name: true,
-                key: true
-              }
-            }
+          include: {
+            environment: true
           }
         }
       }
@@ -107,6 +95,10 @@ router.patch('/:versionId', validateVersionPatchRequest, async (req: Request, re
   try {
     const { content, contentBlockVariantVersion } = req.body;
 
+    if (contentBlockVariantVersion.wasPublished) {
+      return res.status(400).json({ error: 'You cannot update a content block variant version that has been published.' });
+    }
+
     await prisma.contentBlockVariantVersion.update({
       data: {
         content: JSON.stringify(content),
@@ -169,6 +161,18 @@ router.post('/:versionId/publish', validateVersionPublicationRequest(), async (r
         data: {
           versionId: contentBlockVariantVersion.id,
           environmentId: publishingEnvironment.id
+        }
+      });
+    }
+
+    // Ensure that the content block variant version has the prop wasPublished set to true whenever it's published.
+    if (!contentBlockVariantVersion.wasPublished) {
+      await prisma.contentBlockVariantVersion.update({
+        data: {
+          wasPublished: true
+        },
+        where: {
+          id: contentBlockVariantVersion.id
         }
       });
     }
