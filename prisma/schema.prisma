@@ -50,6 +50,7 @@ model PageInstance {
   slug String
   path String
   localeCode String
+  config String @default("") @db.NVarChar(MAX)
   pageId String
   page Page @relation(fields: [pageId], references: [id])
   layouts PageInstanceLayout[]

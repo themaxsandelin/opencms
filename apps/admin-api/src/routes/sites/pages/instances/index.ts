@@ -121,7 +121,12 @@ router.get('/:instanceId', (req: Request, res: Response) => {
   try {
     const { pageInstance } = req.body;
 
-    res.json({ data: pageInstance });
+    res.json({
+      data: {
+        ...pageInstance,
+        config: pageInstance.config ? JSON.parse(pageInstance.config) : {}
+      }
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });
@@ -130,7 +135,7 @@ router.get('/:instanceId', (req: Request, res: Response) => {
 
 router.patch('/:instanceId', validateRequest(updateInstanceSchema), async (req: Request, res: Response) => {
   try {
-    const { title, description, slug, page, pageInstance } = req.body;
+    const { title, description, slug, page, pageInstance, config } = req.body;
 
     const updateQuery: Prisma.PageInstanceUpdateArgs = {
       data: {},
@@ -143,6 +148,9 @@ router.patch('/:instanceId', validateRequest(updateInstanceSchema), async (req: 
     }
     if (description) {
       updateQuery.data.description = description;
+    }
+    if (config) {
+      updateQuery.data.config = JSON.stringify(config);
     }
 
     if (!page.isFrontPage && slug) {
