@@ -34,6 +34,68 @@ export async function updateAllChildPagesInstancePaths(parentId: string, localeC
   return Promise.all(childPages.map(async (childPage) => updateChildPageInstancePaths(childPage, localeCode, path)));
 }
 
+export async function updateAllPageInstancePaths({
+  page,
+  changeOfFrontpage = false,
+  changeOfParentPage = false
+} : {
+  page: Page,
+  changeOfFrontpage: boolean,
+  changeOfParentPage: boolean
+}) {
+  const instances = await prisma.pageInstance.findMany({
+    where: {
+      pageId: page.id
+    }
+  });
+
+  await Promise.all(
+    instances.map(async (pageInstance) => {
+      let path = '';
+      let slug = pageInstance.slug;
+      if (changeOfFrontpage && page.isFrontPage) {
+        path = '/';
+        slug = '/';
+      } else if (changeOfFrontpage && !page.isFrontPage && !changeOfParentPage) {
+        path = '';
+        slug = '';
+      } else if (changeOfParentPage && page.parentId) {
+        const parentInstance = await prisma.pageInstance.findFirst({
+          where: {
+            pageId: page.parentId,
+            localeCode: pageInstance.localeCode
+          }
+        });
+        path = parentInstance && parentInstance.path && pageInstance.slug ? `${parentInstance.path}${pageInstance.slug}` : '';
+      } else if (changeOfParentPage && !page.parentId) {
+        path = slug;
+      }
+      await prisma.pageInstance.update({
+        data: {
+          slug,
+          path
+        },
+        where: {
+          id: pageInstance.id
+        }
+      });
+    })
+  );
+
+  // Make sure to update the child pages instances of the page in question as well.
+  if (changeOfParentPage) {
+    const childPages = await prisma.page.findMany({
+      where: {
+        parentId: page.id
+      }
+    });
+
+    await Promise.all(
+      childPages.map(childPage => updateAllPageInstancePaths({ page: childPage, changeOfFrontpage: false, changeOfParentPage }))
+    );
+  }
+}
+
 export async function deletePageInstance(page: Page, pageInstance: PageInstance) {
   let path = '';
   if (page.parentId) {
@@ -68,4 +130,17 @@ export async function deletePageInstance(page: Page, pageInstance: PageInstance)
       id: pageInstance.id
     }
   });
+}
+
+export async function siblingPageInstanceExistsWithSlug(parentId: string, localeCode: string, slug: string) {
+  const siblingPageInstanceWithSlug = await prisma.pageInstance.findFirst({
+    where: {
+      localeCode,
+      slug,
+      page: {
+        parentId
+      }
+    }
+  });
+  return !!siblingPageInstanceWithSlug;
 }

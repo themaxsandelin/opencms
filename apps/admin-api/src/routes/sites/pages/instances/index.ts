@@ -6,7 +6,7 @@ import { Prisma, PrismaClient } from '@prisma/client';
 import LayoutsRouter from './layouts';
 
 // Controller
-import { updateAllChildPagesInstancePaths, deletePageInstance } from './controller';
+import { updateAllChildPagesInstancePaths, deletePageInstance, siblingPageInstanceExistsWithSlug } from './controller';
 
 // Utils
 import { validateRequest } from '@open-cms/utils';
@@ -52,6 +52,11 @@ router.post('/', validateRequest(createInstanceSchema), async (req: Request, res
     });
     if (existingInstance) {
       return res.status(400).json({ error: `There already exists a page instance with the locale code ${localeCode}.` });
+    }
+
+    const slugTaken = await siblingPageInstanceExistsWithSlug(page.id, localeCode, slug);
+    if (slugTaken) {
+      return res.status(400).json({ error: 'The slug you chose is already being used by a sibling page with the same locale.' });
     }
 
     const givenSlug = page.isFrontPage ? '/' : slug;
@@ -154,6 +159,11 @@ router.patch('/:instanceId', validateRequest(updateInstanceSchema), async (req: 
     }
 
     if (!page.isFrontPage && slug) {
+      const slugTaken = await siblingPageInstanceExistsWithSlug(page.parentId, pageInstance.localeCode, slug);
+      if (slugTaken) {
+        return res.status(400).json({ error: 'The slug you chose is already being used by a sibling page with the same locale.' });
+      }
+
       let givenPath = slug;
       if (page.parentId) {
         const parent = await prisma.pageInstance.findFirst({
