@@ -1,6 +1,6 @@
 // Dependencies
 import { Router, Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, PageInstance } from '@prisma/client';
 
 // Utils
 import { validateRequest, locales } from '@open-cms/utils';
@@ -11,9 +11,69 @@ import { queryContentSchema } from './schema';
 const prisma = new PrismaClient();
 const router = Router();
 
+async function findPageInstanceFromPathPieces(siteId: string, pieces: Array<string>, localeCode: string, previousPathMatch = '') {
+  let instances = [];
+
+  const piece = pieces.splice(0, 1);
+  const paths = [`${previousPathMatch}/${piece}`, `${previousPathMatch}/*`];
+  const pageInstance = await prisma.pageInstance.findFirst({
+    where: {
+      localeCode,
+      OR: [
+        {
+          path: paths[0]
+        },
+        {
+          path: paths[1]
+        }
+      ],
+      AND: {
+        page: {
+          siteId
+        }
+      }
+    }
+  });
+  if (pageInstance) {
+    const matchingPath = pageInstance.path === paths[0] ? paths[0] : paths[1];
+    instances.push(pageInstance);
+    if (pieces.length) {
+      const childInstances = await findPageInstanceFromPathPieces(siteId, pieces, localeCode, matchingPath);
+      instances = [...instances, ...childInstances];
+    }
+  }
+
+  return instances;
+}
+
+async function findPageInstanceListFromPath(siteId: string, path: string, localeCode: string): Promise<Array<PageInstance>> {
+  const pathGroups = [];
+  const pathPieces = (path as string).split('/').filter(Boolean);
+
+  pathPieces.reduce((accumulatedPath: string, piece: string) => {
+    const mainPath = `${accumulatedPath}/${piece}`;
+    const catchAllPath = `${accumulatedPath}/*`;
+    pathGroups.push({ mainPath, catchAllPath });
+    return mainPath;
+  }, '');
+
+  const pages = await findPageInstanceFromPathPieces(siteId, pathPieces, localeCode);
+  const filteredPages = pages.filter(page => page !== null);
+  if (filteredPages.length !== pathGroups.length) {
+    return [];
+  }
+
+  return filteredPages;
+}
+
 router.get('/', validateRequest(queryContentSchema), async (req: Request, res: Response) => {
   try {
     const { pagePath, environment, site: siteKey, locale } = req.query;
+
+    const selectedLocale = locales.find(localeObj => localeObj.code.toLowerCase() === (locale as string).toLowerCase());
+    if (!selectedLocale) {
+      return res.status(400).json({ error: `The provided locale code ${locale} is not valid.` });
+    }
 
     const publishingEnvironment = await prisma.publishingEnvironment.findFirst({
       where: {
@@ -33,80 +93,111 @@ router.get('/', validateRequest(queryContentSchema), async (req: Request, res: R
       return res.status(400).json({ error: `Could not find a site with the key ${siteKey}` });
     }
 
-    const page = await prisma.page.findFirst({
-      where: {
-        slug: (pagePath as string),
-        siteId: site.id
-      }
+    const pageInstances = await findPageInstanceListFromPath(site.id, (pagePath as string), selectedLocale.code);
+    if (!pageInstances.length) {
+      return res.status(404).json({ error: 'Page not found.' });
+    }
+
+    const pageInstance = pageInstances[pageInstances.length - 1];
+    const breadcrumbs = pageInstances.map(pageInstance => {
+      const { title, description, slug, path } = pageInstance;
+      return { title, description, slug, path };
     });
-    if (!page) {
-      return res.status(400).json({ error: `Could not find a page with the path ${pagePath}.` });
-    }
 
-    const selectedLocale = locales.find(localeObj => localeObj.code.toLowerCase() === (locale as string).toLowerCase());
-    if (!selectedLocale) {
-      return res.status(400).json({ error: `The provided locale code ${locale} is not valid.` });
-    }
+    const content = {
+      data: null,
+      layout: null
+    };
 
-    const publishedLayout = await prisma.pageLayoutVersionPublication.findFirst({
+    const layout = await prisma.pageLayoutVersionPublication.findFirst({
       where: {
         environmentId: publishingEnvironment.id,
         version: {
           layout: {
-            page: {
-              id: page.id
+            instances: {
+              some: {
+                pageInstanceId: pageInstance.id
+              }
             }
           }
         }
       },
       include: {
-        version: {
-          select: {
-            content: true
+        version: true
+      }
+    });
+    if (layout) {
+      const { version } = layout;
+      content.layout = JSON.parse(version.content);
+    }
+
+    if (pageInstance.config) {
+      const config = JSON.parse(pageInstance.config);
+
+      if (config.data) {
+        const { source, type } = config.data;
+        if (source === 'route-parameter') {
+          const pathPieces = (pagePath as string).split('/').filter(Boolean);
+          const slug = `/${pathPieces[pathPieces.length - 1]}`;
+          const [ resource, resourceType ] = type.split('_').filter(Boolean);
+          if (resource === 'content-block') {
+            const publishedResource = await prisma.contentBlockVariantVersionPublication.findFirst({
+              where: {
+                environment: {
+                  id: publishingEnvironment.id
+                },
+                version: {
+                  slug,
+                  locale: selectedLocale.code,
+                  variant: {
+                    contentBlock: {
+                      type: resourceType
+                    },
+                    sites: {
+                      some: {
+                        siteId: site.id
+                      }
+                    }
+                  }
+                }
+              },
+              include: {
+                version: {
+                  include: {
+                    variant: {
+                      include: {
+                        contentBlock: true
+                      }
+                    }
+                  }
+                }
+              }
+            });
+            if (publishedResource) {
+              const { version } = publishedResource;
+              content.data = {
+                ...JSON.parse(version.content),
+                slug
+              };
+            }
           }
         }
       }
-    });
-    if (!publishedLayout) {
-      return res.status(204).send();
     }
 
-    const { version } = publishedLayout;
-    const content: { blocks: Array<string> } = JSON.parse(version.content);
+    const { title, description } = pageInstance;
 
-    const fetchedContent = await Promise.all(
-      content.blocks.map(async (blockId) => {
-        const publishedBlock = await prisma.contentBlockVariantVersionPublication.findFirst({
-          where: {
-            environmentId: publishingEnvironment.id,
-            version: {
-              variant: {
-                contentBlock: {
-                  id: blockId
-                }
-              }
-            }
-          },
-          include: {
-            version: {
-              select: {
-                content: true
-              }
-            }
-          }
-        });
-        if (!publishedBlock) {
-          return null;
-        }
-
-        return JSON.parse(publishedBlock.version.content);
-      })
-    );
-
-    res.json(fetchedContent.filter(Boolean));
+    res.json({
+      page: {
+        title,
+        description
+      },
+      breadcrumbs,
+      content
+    });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: (error as any).message });
+    res.status(500).json({ error: error.message });
   }
 });
 
