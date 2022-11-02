@@ -105,12 +105,14 @@ router.get('/', validateRequest(queryContentSchema), async (req: Request, res: R
     const { title, description } = pageInstance;
 
     res.json({
-      page: {
-        title,
-        description
-      },
-      breadcrumbs,
-      content
+      data: {
+        page: {
+          title,
+          description
+        },
+        breadcrumbs,
+        content
+      }
     });
   } catch (error) {
     console.error(error);
