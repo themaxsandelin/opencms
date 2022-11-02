@@ -2,7 +2,7 @@
 import { Router, Request, Response } from 'express';
 
 // Locales
-import { locales } from '@open-cms/utils';
+import locales from '@open-cms/shared/locales';
 
 const router = Router({ mergeParams: true });
 

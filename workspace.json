@@ -4,6 +4,6 @@
   "projects": {
     "admin-api": "apps/admin-api",
     "content-api": "apps/content-api",
-    "utils": "libs/utils"
+    "shared": "libs/shared"
   }
 }

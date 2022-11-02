@@ -18,6 +18,9 @@ export const queryContentBlockSchema = z.object({
     site: z.string({
       required_error: 'You have to provide the site key using the site query parameter.',
       invalid_type_error: 'The site query parameter has to be a string.'
-    })
+    }),
+    parentSlug: z.string({
+      invalid_type_error: 'The parentSlug parameter has to be a string.'
+    }).regex(/^\/((\*?)|([a-z0-9]*)|(([a-z0-9]?)+(?:-[a-z0-9]+))*){1}$/gm, 'The parentSlug must be in the format /like-a-slug.').optional(),
   })
 });

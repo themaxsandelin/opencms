@@ -9,8 +9,8 @@ import LayoutsRouter from './layouts';
 import { updateAllChildPagesInstancePaths, deletePageInstance, siblingPageInstanceExistsWithSlug } from './controller';
 
 // Utils
-import { validateRequest } from '@open-cms/utils';
-import { locales } from '@open-cms/utils';
+import { validateRequest } from '@open-cms/shared/utils';
+import locales from '@open-cms/shared/locales';
 
 // Schemas
 import { createInstanceSchema, updateInstanceSchema } from './schema';

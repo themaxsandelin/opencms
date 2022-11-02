@@ -9,7 +9,7 @@ import PageRouter from './pages';
 import { deleteSite } from './controller';
 
 // Utils
-import { validateRequest } from '@open-cms/utils';
+import { validateRequest } from '@open-cms/shared/utils';
 
 // Data schema
 import { createSiteSchema, updateSiteSchema } from './schema';

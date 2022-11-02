@@ -1,9 +1,7 @@
-interface Locale {
-  code: string;
-  name: string;
-}
+// Types
+import { Locale } from '../types';
 
-export const locales: Array<Locale> = [
+const locales: Array<Locale> = [
   {
     code: 'af-ZA',
     name: 'Afrikaans (South Africa)'
@@ -645,3 +643,5 @@ export const locales: Array<Locale> = [
     name: 'Zulu (South Africa)'
   }
 ];
+
+export default locales;

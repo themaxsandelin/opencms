@@ -6,7 +6,7 @@ import { Prisma, PrismaClient } from '@prisma/client';
 import VersionRouter from './versions';
 
 // Utils
-import { validateRequest } from '@open-cms/utils';
+import { validateRequest } from '@open-cms/shared/utils';
 
 // Validation schema
 import { createVariantSchema } from './schema';

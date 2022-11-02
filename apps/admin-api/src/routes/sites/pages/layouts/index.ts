@@ -9,7 +9,7 @@ import VersionsRouter from './versions';
 import { deletePageLayout } from './controller';
 
 // Utils
-import { validateRequest } from '@open-cms/utils';
+import { validateRequest } from '@open-cms/shared/utils';
 
 // Validation schema
 import { createLayoutSchema } from './schema';

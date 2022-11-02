@@ -1,9 +1,9 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../dist/admin-api",
-    "module": "commonjs",
-    "types": ["node", "express"],
+    "outDir": "../../dist/libs/shared",
+    "declaration": true,
+    "types": [],
     "moduleResolution": "node16"
   },
   "include": ["**/*.ts"]

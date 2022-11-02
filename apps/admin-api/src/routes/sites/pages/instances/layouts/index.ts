@@ -3,7 +3,7 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
 
 // Utils
-import { validateRequest } from '@open-cms/utils';
+import { validateRequest } from '@open-cms/shared/utils';
 
 // Schemas
 import { createInstanceLayoutSchema } from './schema';

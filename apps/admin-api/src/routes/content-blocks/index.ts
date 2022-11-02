@@ -6,7 +6,7 @@ import { PrismaClient, Prisma, ContentBlock } from '@prisma/client';
 import VariantRouter from './variants';
 
 // Utils
-import { validateRequest } from '@open-cms/utils';
+import { validateRequest } from '@open-cms/shared/utils';
 
 // Data schema
 import { createContentBlockSchema, patchContentBlockSchema } from './schema';

@@ -2,7 +2,7 @@
 import { Request, Response, NextFunction } from 'express';
 
 // Utils
-import { validateRequest } from '@open-cms/utils';
+import { validateRequest } from '@open-cms/shared/utils';
 
 // Validation schemas
 import { createQuestionVersionSchema, createQuestionCategoryVersionSchema, patchQuestionVersionSchema, patchQuestionCategoryVersionSchema, versionPublishSchema } from './schema';

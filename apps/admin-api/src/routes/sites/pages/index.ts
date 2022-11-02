@@ -11,7 +11,7 @@ import { deletePage, pageInstanceSlugsAreUniqueOnParentPage } from './controller
 import { updateAllPageInstancePaths } from './instances/controller';
 
 // Utils
-import { validateRequest } from '@open-cms/utils';
+import { validateRequest } from '@open-cms/shared/utils';
 
 // Schemas
 import { createPageSchema, patchPageSchema } from './schema';
