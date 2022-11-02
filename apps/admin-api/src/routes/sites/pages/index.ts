@@ -139,7 +139,7 @@ router.patch('/:pageId', validateRequest(patchPageSchema), async (req: Request, 
     if (name) {
       query.data.name = name;
     }
-    if (parentId) {
+    if (parentId && page.parentId !== parentId) {
       const parent = await prisma.page.findFirst({
         where: {
           id: parentId
