@@ -14,6 +14,7 @@ model PublishingEnvironment {
   contentVersionPublications ContentBlockVariantVersionPublication[]
   layoutVersionPublications PageLayoutVersionPublication[]
   pageInstaceLayoutPublications PageInstanceLayout[]
+  formVersionPublications FormVersionPublication[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt @default(now())
 }
@@ -160,6 +161,35 @@ model ContentBlockVariantVersion {
 model ContentBlockVariantVersionPublication {
   id String @id @default(uuid())
   version ContentBlockVariantVersion @relation(fields: [versionId], references: [id])
+  versionId String
+  environment PublishingEnvironment @relation(fields: [environmentId], references: [id])
+  environmentId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt @default(now())
+}
+
+model Form {
+  id String @id @default(uuid())
+  name String
+  versions FormVersion[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt @default(now())
+}
+
+model FormVersion {
+  id String @id @default(uuid())
+  config String @db.NVarChar(MAX)
+  wasPublished Boolean @default(false)
+  form Form @relation(fields: [formId], references: [id])
+  formId String
+  publications FormVersionPublication[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt @default(now())
+}
+
+model FormVersionPublication {
+  id String @id @default(uuid())
+  version FormVersion @relation(fields: [versionId], references: [id])
   versionId String
   environment PublishingEnvironment @relation(fields: [environmentId], references: [id])
   environmentId String
