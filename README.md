@@ -11,7 +11,7 @@ docker run -d --name sql_server -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=YourCompliace
 ```
 
 ### Using prisma
-When running the api locally and you want to synchronise your database with the Prisma schema, simply run the following command:
+When running the api locally and you want to set up your database with the Prisma schema, simply run the following command:
 ```bash
-npx prisma db seed
+pnpm prisma db push
 ```
