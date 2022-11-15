@@ -13,6 +13,7 @@ import { createFormSchema, patchFormSchema } from './schema';
 
 // Sub routers
 import VersionsRouter from './versions';
+import SubmissionsRouter from './submissions';
 
 const prisma = new PrismaClient();
 const router = Router();
@@ -114,5 +115,6 @@ router.delete('/:formId', async (req: Request, res: Response) => {
 });
 
 router.use('/:formId/versions', VersionsRouter);
+router.use('/:formId/submissions', SubmissionsRouter);
 
 export default router;
