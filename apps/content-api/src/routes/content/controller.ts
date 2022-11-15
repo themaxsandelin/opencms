@@ -138,6 +138,119 @@ async function getPageReference(pageId: string, siteId: string, environmentId: s
   });
 }
 
+function findObjectBoundaryByTag(matches: Array<RegExpMatchArray>, tag: '{' | '}'): number {
+  // Store the number of counterparts (i.e. "{" is a counterpat to "}")
+  // so to determine when the object is actually opened, or closed.
+  let index = -1;
+  let counterParts = 0;
+  for (let i = 0; i < matches.length; i++) {
+    const [str] = matches[i][0];
+    if (str === tag) {
+      if (counterParts) {
+        counterParts -= 1;
+      } else {
+        index = matches[i].index;
+        break;
+      }
+    } else {
+      counterParts += 1;
+    }
+  }
+  return index;
+}
+
+function findObjectBounderies(searchString: string, refIndex: number) {
+  const tagRegex = /[{}]{1}/gm;
+
+  // First, sort to find the closest tag on the left side of the reference index.
+  const tagMatches = [...searchString.matchAll(tagRegex)].sort((matchA, matchB) => {
+    const { index: indexA } = matchA;
+    const { index: indexB } = matchB;
+    if (indexA < refIndex) {
+      if (indexA < indexB) return 1;
+      if (indexA > indexB) return -1;
+    }
+    return 0;
+  });
+
+  const closestTagIndex = tagMatches[0].index;
+
+  // Resort matches by index so we can them split them into two arrays and process them separately.
+  // One array will be for the left side of the reference string, the other for the right side.
+  const leftMostTagIndex = tagMatches.sort((matchA, matchB) => {
+    const { index: indexA } = matchA;
+    const { index: indexB } = matchB;
+    if (indexA > indexB) return 1;
+    if (indexA < indexB) return -1;
+    return 0;
+  }).findIndex((match) => match.index === closestTagIndex);
+
+  const boundaries: {
+    left?: number;
+    right?: number;
+  } = {};
+  // Get the tag matches on the left side of the reference string index.
+  const leftSideTags = tagMatches.slice(0, leftMostTagIndex + 1).sort((matchA, matchB) => {
+    const { index: indexA } = matchA;
+    const { index: indexB } = matchB;
+    if (indexA < indexB) return 1;
+    if (indexA > indexB) return -1;
+    return 0;
+  });
+  // Do likewise on the right side of the reference string index.
+  const rightSideTags = tagMatches.slice(leftMostTagIndex + 1, tagMatches.length);
+
+  boundaries.left = findObjectBoundaryByTag(leftSideTags, '{');
+  boundaries.right = findObjectBoundaryByTag(rightSideTags, '}');
+
+  return boundaries;
+}
+
+function parseLocalizedInput(content: string, localeCode: string) {
+  let searchString = `${content}`;
+  let indexOffset = 0;
+  const keyRegex = /(?:"type":"localized-input"{1})/gm;
+  const keyMatches = [...searchString.matchAll(keyRegex)];
+  for (let i = 0; i < keyMatches.length; i++) {
+    let replaceString = '""';
+    const { index } = keyMatches[i];
+    const { left, right } = findObjectBounderies(searchString, (index - indexOffset));
+    const localizedStringObject = searchString.substring(left, right + 1);
+    const localizedObject: { type: string, values: { [index: string] : string } } = JSON.parse(localizedStringObject);
+    if (Object.prototype.hasOwnProperty.call(localizedObject.values, localeCode)) {
+      replaceString = `"${localizedObject.values[localeCode]}"`;
+    }
+    searchString = `${searchString.substring(0, left)}${replaceString}${searchString.substring(right + 1, searchString.length)}`;
+    indexOffset += localizedStringObject.length - replaceString.length;
+  }
+  return searchString;
+}
+
+async function getFormReference(formId: string, environmentId: string, localeCode: string) {
+  const form = await prisma.formVersionPublication.findFirst({
+    where: {
+      environment: {
+        id: environmentId
+      },
+      version: {
+        formId
+      }
+    },
+    include: {
+      version: true
+    }
+  });
+  if (!form) {
+    return null;
+  }
+  const { version } = form;
+  const config = JSON.parse(parseLocalizedInput(version.config, localeCode))
+  return {
+    id: version.id,
+    fields: config.fields || []
+  };
+}
+
 export async function completeComponentReferences(content: string, siteId: string, environmentId: string, localeCode: string) {
   let copy = `${content}`;
   const regex = /(?:"reference:(?:\S[^"]+)"{1})/gm;
@@ -154,6 +267,11 @@ export async function completeComponentReferences(content: string, siteId: strin
       const page = await getPageReference(id, siteId, environmentId, localeCode);
       if (page) {
         replacement = `${JSON.stringify(page)}`;
+      }
+    } else if (type === 'form') {
+      const form = await getFormReference(id, environmentId, localeCode);
+      if (form) {
+        replacement = `${JSON.stringify(form)}`;
       }
     }
 

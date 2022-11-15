@@ -5,11 +5,13 @@ import { Router, Request, Response } from 'express';
 import ContentRouter from './content';
 import ContentBlocksRouter from './content-blocks';
 import PagesRouter from './pages';
+import FormsRouter from './forms';
 
 const router = Router();
 router.use('/content', ContentRouter);
 router.use('/content-blocks', ContentBlocksRouter);
 router.use('/pages', PagesRouter);
+router.use('/forms', FormsRouter);
 
 router.get('/', (req: Request, res: Response) => {
   res.json({ message: 'In my experience, there\'s no such thing as luck.' });

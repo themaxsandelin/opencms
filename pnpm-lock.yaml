@@ -31,12 +31,14 @@ importers:
       ts-node: 10.9.1
       tslib: ^2.3.0
       typescript: ~4.8.2
+      validator: ^13.7.0
       zod: ^3.19.1
     dependencies:
       '@prisma/client': 4.3.1_prisma@4.3.1
       dotenv: 16.0.2
       express: 4.18.1
       tslib: 2.4.0
+      validator: 13.7.0
       zod: 3.19.1
     devDependencies:
       '@nrwl/cli': 14.7.6
@@ -45,7 +47,7 @@ importers:
       '@nrwl/jest': 14.7.6_e66ea6dw54osg6leykzejx6vue
       '@nrwl/linter': 14.7.6_vkzhdcaxlgzobdho7vc27sig7a
       '@nrwl/node': 14.7.6_jqdwx7jby3vx6tfvalsdaanlcy
-      '@nrwl/nx-cloud': 14.6.2
+      '@nrwl/nx-cloud': 15.0.2
       '@nrwl/workspace': 14.7.6_os4shho66bggbcppkjxfaa3ea4
       '@types/express': 4.17.13
       '@types/jest': 28.1.1
@@ -1000,13 +1002,14 @@ packages:
       - webpack-cli
     dev: true
 
-  /@nrwl/nx-cloud/14.6.2:
-    resolution: {integrity: sha512-w8ujbFMOxE7lJg52O3JjnpTGlBKc+/vovxVTplIfGU9TYgEgAo/v4HS9svztzGd9Era7qmNaoYOmxm6Ebtbo5g==}
+  /@nrwl/nx-cloud/15.0.2:
+    resolution: {integrity: sha512-DaTASuXmGyQHMxJuK6y3f7fs+Q0qQCfYDIDVGK9muNwN/QItLeWdRNltLQxbrBeS112kQTu2FPsr0DmRD60+0A==}
     hasBin: true
     dependencies:
       axios: 0.21.4
       chalk: 4.1.0
       dotenv: 10.0.0
+      fs-extra: 10.1.0
       node-machine-id: 1.1.12
       strip-json-comments: 3.1.1
       tar: 6.1.11
@@ -6516,6 +6519,11 @@ packages:
       '@types/istanbul-lib-coverage': 2.0.4
       convert-source-map: 1.8.0
     dev: true
+
+  /validator/13.7.0:
+    resolution: {integrity: sha512-nYXQLCBkpJ8X6ltALua9dRrZDHVYxjJ1wgskNt1lH9fzGjs3tgojGSCBjmEPwkWS1y29+DrizMTW19Pr9uB2nw==}
+    engines: {node: '>= 0.10'}
+    dev: false
 
   /vary/1.1.2:
     resolution: {integrity: sha512-BNGbWLfd0eUPabhkXUVm0j8uuvREyTh5ovRa/dyow/BqAbZJyC+5fU+IzQOzmAKzYqYRAISoRhdQr3eIZ/PXqg==}
