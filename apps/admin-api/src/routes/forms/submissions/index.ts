@@ -2,6 +2,9 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
 
+// Routers
+import FilesRouter from './files';
+
 const prisma = new PrismaClient();
 const router = Router({ mergeParams: true });
 
@@ -47,7 +50,8 @@ router.use('/:submissionId', async (req: Request, res: Response, next: NextFunct
       },
       include: {
         environment: true,
-        site: true
+        site: true,
+        files: true
       },
       orderBy: {
         createdAt: 'desc'
@@ -77,5 +81,7 @@ router.get('/:submissionId', async (req: Request, res: Response) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+router.use('/:submissionId/files', FilesRouter);
 
 export default router;
