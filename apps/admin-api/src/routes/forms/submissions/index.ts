@@ -8,7 +8,7 @@ const router = Router({ mergeParams: true });
 router.get('/', async (req: Request, res: Response) => {
   try {
     const { formId } = req.params;
-    const submissions = await prisma.formVersionSubmissions.findMany({
+    const submissions = await prisma.formVersionSubmission.findMany({
       where: {
         version: {
           formId
@@ -38,7 +38,7 @@ router.get('/', async (req: Request, res: Response) => {
 router.use('/:submissionId', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { formId, submissionId } = req.params;
-    const submission = await prisma.formVersionSubmissions.findFirst({
+    const submission = await prisma.formVersionSubmission.findFirst({
       where: {
         id: submissionId,
         version: {

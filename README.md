@@ -1,6 +1,9 @@
 # Open CMS
 An open source CMS.
 
+## File uploads
+The CMS has support for uploading files when submitting forms. This feature requires some kind of file storage to be mounted and accessible by the app. The app expects a folder to exist and be defined in an environment variable called `UPLOAD_DIR`, as the full path to that folder. Inside the folder, there also has to be two sub folders, one for the temporary uploads, and one for the long term storage of files for each form submission. These folders need to be named `/uploads` and `/submissions` respectively. With that in place, you're all set.
+
 ## Database
 The CMS uses Microsoft SQL Server with Prisma as it's ORM. To make sure Prisma runs, you'll have to create an `.env` file in the root of the project, and make sure that you set the variable `DATABASE_URL` is set. You can check out the [Prisma docs on connection urls](https://www.prisma.io/docs/reference/database-reference/connection-urls) to see how you can format the string correctly.
 

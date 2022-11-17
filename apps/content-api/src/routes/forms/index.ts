@@ -1,22 +1,45 @@
 // Dependencies
 import { Router, Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
+import multer from 'multer';
+import dotenv from 'dotenv';
 
 // Utils
 // import { validateRequest } from '@open-cms/shared/utils';
 import locales from '@open-cms/shared/locales';
 
 // Controller
-import { validateFormSubmission } from './controller';
+import { validateFormSubmission, handleSubmissionFiles, deleteRequestFiles } from './controller';
+
+// Load local env variables.
+const { parsed: env } = dotenv.config();
+
+const uploadDir = env ? env.UPLOAD_DIR : process.env.UPLOAD_DIR;
+if (!uploadDir) {
+  console.error('You have to define an upload directory using the environment variable UPLOAD_DIR.');
+  process.exit(0);
+}
 
 const router = Router();
 const prisma = new PrismaClient();
 
-router.post('/:id', async (req: Request, res: Response) => {
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    cb(null, `${Date.now() + '-' + Math.round(Math.random() * 100000000)}`);
+  },
+});
+const upload = multer({
+  storage,
+  limits: {},
+});
+
+router.post('/:id', upload.array('files[]'), async (req: Request, res: Response) => {
   try {
     const { environment, locale, site: siteKey } = req.query;
     const { id } = req.params;
-    const { data } = req.body;
 
     const selectedLocale = locales.find(localeObj => localeObj.code.toLowerCase() === (locale as string).toLowerCase());
     if (!selectedLocale) {
@@ -41,12 +64,12 @@ router.post('/:id', async (req: Request, res: Response) => {
       return res.status(400).json({ error: `Could not find a site with the key ${siteKey}` });
     }
 
-    const { valid, cause, fieldKey, data: formData } = await validateFormSubmission(id, data, publishingEnvironment.id);
+    const { valid, cause, fieldKey, data: formData } = await validateFormSubmission(id, req.body, publishingEnvironment.id);
     if (!valid) {
       return res.status(400).json({ error: 'Invalid form submission', details: { cause, fieldKey } });
     }
 
-    await prisma.formVersionSubmissions.create({
+    const submission = await prisma.formVersionSubmission.create({
       data: {
         data: JSON.stringify(formData),
         versionId: id,
@@ -56,8 +79,15 @@ router.post('/:id', async (req: Request, res: Response) => {
       }
     });
 
+    const files = req.files as Express.Multer.File[];
+    await handleSubmissionFiles(files, submission, uploadDir);
+
     res.json({ data: { submitted: true } });
   } catch (error) {
+    // Ensure we delete any uploaded files in the case of a failed request.
+    const files = req.files as Express.Multer.File[];
+    await deleteRequestFiles(files);
+
     console.error(error);
     res.status(500).json({ error: error.message });
   }

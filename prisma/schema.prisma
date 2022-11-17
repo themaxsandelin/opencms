@@ -15,7 +15,7 @@ model PublishingEnvironment {
   layoutVersionPublications PageLayoutVersionPublication[]
   pageInstaceLayoutPublications PageInstanceLayout[]
   formVersionPublications FormVersionPublication[]
-  formVersionSubmissions FormVersionSubmissions[]
+  formVersionSubmissions FormVersionSubmission[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt @default(now())
 }
@@ -26,7 +26,7 @@ model Site {
   key String @unique
   pages Page[]
   contentBlockVariants ContentBlockVariantOnSite[]
-  formVersionSubmissions FormVersionSubmissions[]
+  formVersionSubmissions FormVersionSubmission[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt @default(now())
 }
@@ -185,12 +185,12 @@ model FormVersion {
   form Form @relation(fields: [formId], references: [id])
   formId String
   publications FormVersionPublication[]
-  submissions FormVersionSubmissions[]
+  submissions FormVersionSubmission[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt @default(now())
 }
 
-model FormVersionSubmissions {
+model FormVersionSubmission {
   id String @id @default(uuid())
   data String @db.NVarChar(MAX)
   localeCode String
@@ -200,6 +200,19 @@ model FormVersionSubmissions {
   environmentId String
   version FormVersion @relation(fields: [versionId], references: [id])
   versionId String
+  files FormVersionSubmissionFile[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt @default(now())
+}
+
+model FormVersionSubmissionFile {
+  id String @id @default(uuid())
+  fileName String
+  mimeType String
+  size Int
+  originalName String
+  submission FormVersionSubmission @relation(fields: [submissionId], references: [id])
+  submissionId String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt @default(now())
 }

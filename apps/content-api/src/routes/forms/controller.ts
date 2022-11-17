@@ -1,5 +1,6 @@
 // Dependencies
-import { PrismaClient } from '@prisma/client';
+import { rename, mkdir, rm } from 'fs/promises';
+import { PrismaClient, FormVersionSubmission } from '@prisma/client';
 import { escape } from 'validator';
 
 // Types
@@ -17,6 +18,7 @@ function validateFormField(field: any, data: any) {
       fieldKey: config.key
     };
   }
+
   const value = escape(data[config.key]);
   return {
     valid: true,
@@ -52,15 +54,50 @@ export async function validateFormSubmission(id: string, data: any, environmentI
   if (fields) {
     for (let i = 0; i < fields.length; i++) {
       const field = fields[i];
-      const fieldResponse = validateFormField(field, data);
-      if (!fieldResponse.valid) {
-        response = fieldResponse;
-        break;
-      } else {
-        response.data[field.config.key] = fieldResponse.value;
+      if (field.type !== 'file') {
+        const fieldResponse = validateFormField(field, data);
+        if (!fieldResponse.valid) {
+          response = fieldResponse;
+          break;
+        } else {
+          response.data[field.config.key] = fieldResponse.value;
+        }
       }
     }
   }
 
   return response;
+}
+
+async function createSubmissionFile(file: Express.Multer.File, submissionId: string) {
+  return prisma.formVersionSubmissionFile.create({
+    data: {
+      fileName: file.filename,
+      mimeType: file.mimetype,
+      size: file.size,
+      originalName: file.originalname,
+      submissionId,
+    }
+  });
+}
+
+export async function handleSubmissionFiles(files: Array<Express.Multer.File>, submission: FormVersionSubmission, uploadDir: string) {
+  // Ensure the submission directory exists.
+  const submissionFolder = `${uploadDir}/submissions/${submission.id}`;
+  await mkdir(submissionFolder);
+
+  await Promise.all(
+    files.map(async (file) => {
+      const fileEntry = await createSubmissionFile(file, submission.id);
+      await rename(file.path, `${submissionFolder}/${fileEntry.id}`);
+    })
+  );
+}
+
+export async function deleteRequestFiles(files: Array<Express.Multer.File>) {
+  await Promise.all(
+    files.map(async (file) => {
+      await rm(file.path);
+    })
+  );
 }
