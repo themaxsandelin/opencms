@@ -72,7 +72,6 @@ export async function validateFormSubmission(id: string, data: any, environmentI
 async function createSubmissionFile(file: Express.Multer.File, submissionId: string) {
   return prisma.formVersionSubmissionFile.create({
     data: {
-      fileName: file.filename,
       mimeType: file.mimetype,
       size: file.size,
       originalName: file.originalname,

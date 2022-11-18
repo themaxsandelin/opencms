@@ -224,7 +224,7 @@ model FormVersionSubmission {
 
 model FormVersionSubmissionFile {
   id String @id @default(uuid())
-  fileName String
+  fileName String?
   mimeType String
   size Int
   originalName String
