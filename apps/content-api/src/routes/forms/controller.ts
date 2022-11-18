@@ -101,3 +101,27 @@ export async function deleteRequestFiles(files: Array<Express.Multer.File>) {
     })
   );
 }
+
+export async function validateFormToken(tokenId: string, siteId: string, environmentId: string, localeCode: string) {
+  const token = await prisma.formVersionToken.findFirst({
+    where: {
+      id: tokenId,
+      siteId,
+      environmentId,
+      localeCode,
+      expiresAt: {
+        gte: new Date().toISOString()
+      }
+    }
+  });
+  if (!token) return false;
+  return true;
+}
+
+export async function deleteFormToken(tokenId: string) {
+  return prisma.formVersionToken.delete({
+    where: {
+      id: tokenId
+    }
+  });
+}

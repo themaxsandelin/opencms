@@ -9,7 +9,7 @@ import dotenv from 'dotenv';
 import locales from '@open-cms/shared/locales';
 
 // Controller
-import { validateFormSubmission, handleSubmissionFiles, deleteRequestFiles } from './controller';
+import { validateFormSubmission, handleSubmissionFiles, deleteRequestFiles, validateFormToken, deleteFormToken } from './controller';
 
 // Load local env variables.
 const { parsed: env } = dotenv.config();
@@ -40,9 +40,11 @@ router.post('/:id', upload.array('files[]'), async (req: Request, res: Response)
   try {
     const { environment, locale, site: siteKey } = req.query;
     const { id } = req.params;
+    const files = req.files as Express.Multer.File[];
 
     const selectedLocale = locales.find(localeObj => localeObj.code.toLowerCase() === (locale as string).toLowerCase());
     if (!selectedLocale) {
+      await deleteRequestFiles(files);
       return res.status(400).json({ error: `The provided locale code ${locale} is not valid.` });
     }
 
@@ -52,6 +54,7 @@ router.post('/:id', upload.array('files[]'), async (req: Request, res: Response)
       }
     });
     if (!publishingEnvironment) {
+      await deleteRequestFiles(files);
       return res.status(400).json({ error: 'Invalid or unknown environment key.' });
     }
 
@@ -61,11 +64,20 @@ router.post('/:id', upload.array('files[]'), async (req: Request, res: Response)
       }
     });
     if (!site) {
+      await deleteRequestFiles(files);
       return res.status(400).json({ error: `Could not find a site with the key ${siteKey}` });
+    }
+
+    const token = (req.headers['x-form-token'] as string);
+    const validToken = await validateFormToken(token, site.id, publishingEnvironment.id, selectedLocale.code);
+    if (!validToken) {
+      await deleteRequestFiles(files);
+      return res.status(400).json({ error: 'Invalid token.' });
     }
 
     const { valid, cause, fieldKey, data: formData } = await validateFormSubmission(id, req.body, publishingEnvironment.id);
     if (!valid) {
+      await deleteRequestFiles(files);
       return res.status(400).json({ error: 'Invalid form submission', details: { cause, fieldKey } });
     }
 
@@ -79,8 +91,8 @@ router.post('/:id', upload.array('files[]'), async (req: Request, res: Response)
       }
     });
 
-    const files = req.files as Express.Multer.File[];
     await handleSubmissionFiles(files, submission, uploadDir);
+    await deleteFormToken(token);
 
     res.json({ data: { submitted: true } });
   } catch (error) {

@@ -226,7 +226,23 @@ function parseLocalizedInput(content: string, localeCode: string) {
   return searchString;
 }
 
-async function getFormReference(formId: string, environmentId: string, localeCode: string) {
+async function createFormVersionToken(versionId: string, siteId: string, environmentId: string, localeCode: string) {
+  // We might want to put this in a config in the future. But here it is. :)
+  const lifetimeInHours = 1;
+  const date = new Date();
+  date.setTime(date.getTime() + (lifetimeInHours * 60 * 60 * 1000));
+  return prisma.formVersionToken.create({
+    data: {
+      expiresAt: date.toISOString(),
+      localeCode,
+      versionId,
+      siteId,
+      environmentId
+    }
+  });
+}
+
+async function getFormReference(formId: string, siteId: string, environmentId: string, localeCode: string) {
   const form = await prisma.formVersionPublication.findFirst({
     where: {
       environment: {
@@ -245,9 +261,11 @@ async function getFormReference(formId: string, environmentId: string, localeCod
   }
   const { version } = form;
   const config = JSON.parse(parseLocalizedInput(version.config, localeCode))
+  const tokenData = await createFormVersionToken(version.id, siteId, environmentId, localeCode);
   return {
     id: version.id,
-    fields: config.fields || []
+    fields: config.fields || [],
+    token: tokenData.id
   };
 }
 
@@ -269,7 +287,7 @@ export async function completeComponentReferences(content: string, siteId: strin
         replacement = `${JSON.stringify(page)}`;
       }
     } else if (type === 'form') {
-      const form = await getFormReference(id, environmentId, localeCode);
+      const form = await getFormReference(id, siteId, environmentId, localeCode);
       if (form) {
         replacement = `${JSON.stringify(form)}`;
       }
