@@ -9,7 +9,7 @@ import dotenv from 'dotenv';
 import locales from '@open-cms/shared/locales';
 
 // Controller
-import { validateFormSubmission, handleSubmissionFiles, deleteRequestFiles, validateFormToken, deleteFormToken } from './controller';
+import { getPublishedFormVersion, validateFormData, validateSubmissionFiles, handleSubmissionFiles, deleteRequestFiles, validateFormToken, deleteFormToken } from './controller';
 
 // Load local env variables.
 const { parsed: env } = dotenv.config();
@@ -25,7 +25,7 @@ const prisma = new PrismaClient();
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, uploadDir);
+    cb(null, `${uploadDir}/uploads`);
   },
   filename: (req, file, cb) => {
     cb(null, `${Date.now() + '-' + Math.round(Math.random() * 100000000)}`);
@@ -68,6 +68,12 @@ router.post('/:id', upload.array('files[]'), async (req: Request, res: Response)
       return res.status(400).json({ error: `Could not find a site with the key ${siteKey}` });
     }
 
+    const publishedFormVersion = await getPublishedFormVersion(id, publishingEnvironment.id);
+    if (!publishedFormVersion) {
+      await deleteRequestFiles(files);
+      return res.status(400).json({ error: 'Unknown form.' });
+    }
+
     const token = (req.headers['x-form-token'] as string);
     const validToken = await validateFormToken(token, site.id, publishingEnvironment.id, selectedLocale.code);
     if (!validToken) {
@@ -75,10 +81,16 @@ router.post('/:id', upload.array('files[]'), async (req: Request, res: Response)
       return res.status(400).json({ error: 'Invalid token.' });
     }
 
-    const { valid, cause, fieldKey, data: formData } = await validateFormSubmission(id, req.body, publishingEnvironment.id);
+    const { valid, cause, fieldKey, data: formData } = await validateFormData(req.body, publishedFormVersion.version);
     if (!valid) {
       await deleteRequestFiles(files);
       return res.status(400).json({ error: 'Invalid form submission', details: { cause, fieldKey } });
+    }
+
+    const { valid: validFiles, cause: validFilesCause, fieldKey: validFilesKey } = await validateSubmissionFiles(files, publishedFormVersion.version);
+    if (!validFiles) {
+      await deleteRequestFiles(files);
+      return res.status(400).json({ error: 'Invalid form submission', details: { cause: validFilesCause, fieldKey: validFilesKey } });
     }
 
     const submission = await prisma.formVersionSubmission.create({

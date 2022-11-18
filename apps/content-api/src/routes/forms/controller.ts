@@ -1,6 +1,6 @@
 // Dependencies
 import { rename, mkdir, rm } from 'fs/promises';
-import { PrismaClient, FormVersionSubmission } from '@prisma/client';
+import { PrismaClient, FormVersionSubmission, FormVersion } from '@prisma/client';
 import { escape } from 'validator';
 
 // Types
@@ -26,13 +26,8 @@ function validateFormField(field: any, data: any) {
   };
 }
 
-export async function validateFormSubmission(id: string, data: any, environmentId: string): Promise<ValidationResponse> {
-  let response: ValidationResponse = {
-    valid: true,
-    data: {}
-  };
-
-  const formPublication = await prisma.formVersionPublication.findFirst({
+export async function getPublishedFormVersion(id: string, environmentId: string) {
+  return prisma.formVersionPublication.findFirst({
     where: {
       environmentId,
       version: {
@@ -43,14 +38,15 @@ export async function validateFormSubmission(id: string, data: any, environmentI
       version: true
     }
   });
-  if (!formPublication) {
-    return {
-      valid: false,
-    };
-  }
+}
 
-  const { version } = formPublication;
-  const { fields } = JSON.parse(version.config);
+export async function validateFormData(data: any, formVersion: FormVersion): Promise<ValidationResponse> {
+  let response: ValidationResponse = {
+    valid: true,
+    data: {}
+  };
+
+  const { fields } = JSON.parse(formVersion.config);
   if (fields) {
     for (let i = 0; i < fields.length; i++) {
       const field = fields[i];
@@ -78,6 +74,67 @@ async function createSubmissionFile(file: Express.Multer.File, submissionId: str
       submissionId,
     }
   });
+}
+
+export async function validateSubmissionFiles(files: Array<Express.Multer.File>, formVersion: FormVersion): Promise<ValidationResponse> {
+  let fileCountLimit = 5;
+  const fileSizeLimit = 5000000; // 5mb
+
+  let response: ValidationResponse = {
+    valid: true,
+    data: {}
+  };
+
+  const { fields } = JSON.parse(formVersion.config);
+  const fileField = fields.find(field => field.type === 'file');
+  if (!fileField) {
+    return {
+      valid: false,
+      cause: 'files-not-accepted',
+      fieldKey: null
+    };
+  }
+
+  const { mimeTypes, limit } = fileField.config;
+  // Validate a total limit of files being uploaded.
+  // Current max is hard coded to 5, but can be configured to less than that.
+  if (limit) {
+    fileCountLimit = typeof limit === 'string' ? parseInt(limit) : limit;
+  }
+  if (files.length > fileCountLimit) {
+    response.valid = false;
+    response.cause = 'too-many-files';
+    response.fieldKey = fileField.config.key;
+    return response;
+  }
+
+  // Validate based on any mimeType configured on the file field.
+  let types = [];
+  if (mimeTypes) {
+    types = mimeTypes.split(', ');
+  }
+
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    if (types.length && !types.includes(file.mimetype)) {
+      response = {
+        valid: false,
+        cause: 'invalid-file-type',
+        fieldKey: fileField.config.key
+      };
+      break;
+    }
+    if (file.size > fileSizeLimit) {
+      response = {
+        valid: false,
+        cause: 'size-limit-reached',
+        fieldKey: fileField.config.key
+      };
+      break;
+    }
+  }
+
+  return response;
 }
 
 export async function handleSubmissionFiles(files: Array<Express.Multer.File>, submission: FormVersionSubmission, uploadDir: string) {
