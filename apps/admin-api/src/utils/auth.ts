@@ -34,10 +34,11 @@ export async function authorizeUserByToken(token: string) {
     if (!decoded.iss.includes(env.AUTH_TENANT_ID)) {
       return { valid: false, reason: 'invalid-issuer' };
     }
-    const now = Math.round(new Date().getTime() / 1000);
-    if (now >= decoded.exp) {
-      return { valid: false, reason: 'token-expired' };
-    }
+    // TODO: Look into expiration handling of token.
+    // const now = Math.round(new Date().getTime() / 1000);
+    // if (now >= decoded.exp) {
+    //   return { valid: false, reason: 'token-expired' };
+    // }
     const user = await ensureUserFromToken(decoded.upn, decoded.given_name, decoded.family_name);
 
     return { valid: true, user };
