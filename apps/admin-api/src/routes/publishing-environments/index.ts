@@ -13,7 +13,12 @@ const router = Router();
 
 router.get('/', async (req: Request, res: Response) => {
   try {
-    const publishingEnvironments = await prisma.publishingEnvironment.findMany();
+    const publishingEnvironments = await prisma.publishingEnvironment.findMany({
+      include: {
+        createdBy: true,
+        updatedBy: true,
+      }
+    });
     res.json({ data: publishingEnvironments });
   } catch (error) {
     console.error(error);
@@ -23,12 +28,14 @@ router.get('/', async (req: Request, res: Response) => {
 
 router.post('/', validateRequest(createPublishingEnvironmentSchema), async (req: Request, res: Response) => {
   try {
-    const { name, key } = req.body;
+    const { name, key, user } = req.body;
 
     const publishingEnvironment = await prisma.publishingEnvironment.create({
       data: {
         name,
-        key
+        key,
+        createdByUserId: user.id,
+        updatedByUserId: user.id,
       }
     });
 

@@ -47,11 +47,13 @@ router.get('/', async (req: Request, res: Response) => {
 
 router.post('/', async (req: Request, res: Response) => {
   try {
-    const { content, pageLayout } = req.body;
+    const { content, pageLayout, user } = req.body;
     const version = await prisma.pageLayoutVersion.create({
       data: {
         content: JSON.stringify(content),
-        pageLayoutId: pageLayout.id
+        pageLayoutId: pageLayout.id,
+        createdByUserId: user.id,
+        updatedByUserId: user.id,
       }
     });
 
@@ -94,7 +96,7 @@ router.get('/:versionId', async (req: Request, res: Response) => {
 
 router.patch('/:versionId', async (req: Request, res: Response) => {
   try {
-    const { content, pageLayoutVersion } = req.body;
+    const { content, pageLayoutVersion, user } = req.body;
 
     if (pageLayoutVersion.wasPublished) {
       return res.status(400).json({ error: 'You cannot update a page layout version that has been published to an environment.' });
@@ -103,6 +105,7 @@ router.patch('/:versionId', async (req: Request, res: Response) => {
     await prisma.pageLayoutVersion.update({
       data: {
         content: JSON.stringify(content),
+        updatedByUserId: user.id,
       },
       where: {
         id: pageLayoutVersion.id
@@ -130,7 +133,7 @@ router.delete('/:versionId', async (req: Request, res: Response) => {
 
 router.post('/:versionId/publish', validateRequest(publishVersionSchema), async (req: Request, res: Response) => {
   try {
-    const { environment: environmentId, pageLayoutVersion, page } = req.body;
+    const { environment: environmentId, pageLayoutVersion, page, user } = req.body;
 
     const publishingEnvironment = await prisma.publishingEnvironment.findFirst({
       where: {
@@ -161,7 +164,9 @@ router.post('/:versionId/publish', validateRequest(publishVersionSchema), async 
       // Otherwise, update the current publication to the new version.
       await prisma.pageLayoutVersionPublication.update({
         data: {
-          versionId: pageLayoutVersion.id
+          versionId: pageLayoutVersion.id,
+          createdByUserId: user.id,
+          updatedByUserId: user.id,
         },
         where: {
           id: existingPublication.id
@@ -172,6 +177,8 @@ router.post('/:versionId/publish', validateRequest(publishVersionSchema), async 
         data: {
           versionId: pageLayoutVersion.id,
           environmentId: publishingEnvironment.id,
+          createdByUserId: user.id,
+          updatedByUserId: user.id,
         }
       });
     }
@@ -179,7 +186,8 @@ router.post('/:versionId/publish', validateRequest(publishVersionSchema), async 
     if (!pageLayoutVersion.wasPublished) {
       await prisma.pageLayoutVersion.update({
         data: {
-          wasPublished: true
+          wasPublished: true,
+          updatedByUserId: user.id,
         },
         where: {
           id: pageLayoutVersion.id

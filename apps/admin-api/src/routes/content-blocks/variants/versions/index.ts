@@ -45,14 +45,16 @@ router.get('/', async (req: Request, res: Response) => {
 
 router.post('/', validateVersionCreationRequest, async (req: Request, res: Response) => {
   try {
-    const { content, locale, slug, contentBlockVariant } = req.body;
+    const { content, locale, slug, contentBlockVariant, user } = req.body;
 
     const version = await prisma.contentBlockVariantVersion.create({
       data: {
         content: JSON.stringify(content),
         locale,
         slug,
-        contentBlockVariantId: contentBlockVariant.id
+        contentBlockVariantId: contentBlockVariant.id,
+        createdByUserId: user.id,
+        updatedByUserId: user.id,
       }
     });
 
@@ -97,7 +99,7 @@ router.get('/:versionId', async (req: Request, res: Response) => {
 
 router.patch('/:versionId', validateVersionPatchRequest, async (req: Request, res: Response) => {
   try {
-    const { content, slug, contentBlockVariantVersion } = req.body;
+    const { content, slug, contentBlockVariantVersion, user } = req.body;
 
     if (contentBlockVariantVersion.wasPublished) {
       return res.status(400).json({ error: 'You cannot update a content block variant version that has been published.' });
@@ -106,7 +108,8 @@ router.patch('/:versionId', validateVersionPatchRequest, async (req: Request, re
     await prisma.contentBlockVariantVersion.update({
       data: {
         content: JSON.stringify(content),
-        slug
+        slug,
+        updatedByUserId: user.id,
       },
       where: {
         id: contentBlockVariantVersion.id
@@ -122,7 +125,7 @@ router.patch('/:versionId', validateVersionPatchRequest, async (req: Request, re
 
 router.post('/:versionId/publish', validateVersionPublicationRequest(), async (req: Request, res: Response) => {
   try {
-    const { environment: environmentId, contentBlock, contentBlockVariantVersion } = req.body;
+    const { environment: environmentId, contentBlock, contentBlockVariantVersion, user } = req.body;
 
     const publishingEnvironment = await prisma.publishingEnvironment.findFirst({
       where: {
@@ -154,7 +157,9 @@ router.post('/:versionId/publish', validateVersionPublicationRequest(), async (r
       // Otherwise, update the current publication to the new version.
       await prisma.contentBlockVariantVersionPublication.update({
         data: {
-          versionId: contentBlockVariantVersion.id
+          versionId: contentBlockVariantVersion.id,
+          createdByUserId: user.id,
+          updatedByUserId: user.id,
         },
         where: {
           id: existingPublication.id
@@ -166,7 +171,9 @@ router.post('/:versionId/publish', validateVersionPublicationRequest(), async (r
       await prisma.contentBlockVariantVersionPublication.create({
         data: {
           versionId: contentBlockVariantVersion.id,
-          environmentId: publishingEnvironment.id
+          environmentId: publishingEnvironment.id,
+          createdByUserId: user.id,
+          updatedByUserId: user.id,
         }
       });
     }
@@ -175,7 +182,8 @@ router.post('/:versionId/publish', validateVersionPublicationRequest(), async (r
     if (!contentBlockVariantVersion.wasPublished) {
       await prisma.contentBlockVariantVersion.update({
         data: {
-          wasPublished: true
+          wasPublished: true,
+          updatedByUserId: user.id,
         },
         where: {
           id: contentBlockVariantVersion.id

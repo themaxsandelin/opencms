@@ -53,7 +53,8 @@ router.get('/:fileId/file', async (req: Request, res: Response) => {
     const options = {
       root: `${uploadDir}/submissions/${formSubmission.id}`,
       headers: {
-        'Content-Type': formSubmissionFile.mimeType
+        'Content-Type': formSubmissionFile.mimeType,
+        'Content-Disposition': 'inline'
       }
     };
 

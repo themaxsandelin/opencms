@@ -35,12 +35,14 @@ router.get('/', async (req: Request, res: Response) => {
 
 router.post('/', validateRequest(createLayoutSchema), async (req: Request, res: Response) => {
   try {
-    const { name, page } = req.body;
+    const { name, page, user } = req.body;
 
     const pageLayout = await prisma.pageLayout.create({
       data: {
         name,
-        pageId: page.id
+        pageId: page.id,
+        createdByUserId: user.id,
+        updatedByUserId: user.id,
       }
     });
 

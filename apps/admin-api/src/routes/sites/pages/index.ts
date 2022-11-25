@@ -34,7 +34,9 @@ router.get('/', async (req: Request, res: Response) => {
         }
       },
       include: {
-        parent: true
+        parent: true,
+        createdBy: true,
+        updatedBy: true,
       }
     });
 
@@ -47,7 +49,7 @@ router.get('/', async (req: Request, res: Response) => {
 
 router.post('/', validateRequest(createPageSchema), async (req: Request, res: Response) => {
   try {
-    const { name, isFrontPage, parentId } = req.body;
+    const { name, isFrontPage, parentId, user } = req.body;
     const { siteId } = req.params;
 
     if (isFrontPage) {
@@ -82,7 +84,9 @@ router.post('/', validateRequest(createPageSchema), async (req: Request, res: Re
         name,
         isFrontPage,
         siteId,
-        parentId: parent ? parent.id : null
+        parentId: parent ? parent.id : null,
+        createdByUserId: user.id,
+        updatedByUserId: user.id,
       }
     });
 
@@ -126,12 +130,14 @@ router.get('/:pageId', async (req: Request, res: Response) => {
 
 router.patch('/:pageId', validateRequest(patchPageSchema), async (req: Request, res: Response) => {
   try {
-    const { name, isFrontPage, parentId, page } = req.body;
+    const { name, isFrontPage, parentId, page, user } = req.body;
 
     let changeOfFrontpage = false;
     let changeOfParentPage = false;
     const query: Prisma.PageUpdateArgs = {
-      data: {},
+      data: {
+        updatedByUserId: user.id,
+      },
       where: {
         id: page.id
       }
@@ -219,8 +225,8 @@ router.patch('/:pageId', validateRequest(patchPageSchema), async (req: Request, 
 
 router.delete('/:pageId', async (req: Request, res: Response) => {
   try {
-    const { page } = req.body;
-    await deletePage(page);
+    const { page, user } = req.body;
+    await deletePage(page, user.id);
 
     return res.json({ data: { deleted: true } });
   } catch (error) {

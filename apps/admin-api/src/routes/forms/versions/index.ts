@@ -45,12 +45,14 @@ router.get('/', async (req: Request, res: Response) => {
 router.post('/', async (req: Request, res: Response) => {
   try {
     const { formId } = req.params;
-    const { config } = req.body;
+    const { config, user } = req.body;
 
     const version = await prisma.formVersion.create({
       data: {
         formId,
-        config: JSON.stringify(config)
+        config: JSON.stringify(config),
+        createdByUserId: user.id,
+        updatedByUserId: user.id,
       }
     });
 
@@ -95,7 +97,7 @@ router.get('/:versionId', async (req: Request, res: Response) => {
 
 router.patch('/:versionId', async (req: Request, res: Response) => {
   try {
-    const { formVersion } = req.body;
+    const { formVersion, user } = req.body;
     if (formVersion.wasPublished) {
       return res.status(400).json({ error: 'Cannot update a version that has been published.' });
     }
@@ -103,7 +105,8 @@ router.patch('/:versionId', async (req: Request, res: Response) => {
     const { config } = req.body;
     await prisma.formVersion.update({
       data: {
-        config: JSON.stringify(config)
+        config: JSON.stringify(config),
+        updatedByUserId: user.id,
       },
       where: {
         id: formVersion.id
@@ -120,7 +123,7 @@ router.patch('/:versionId', async (req: Request, res: Response) => {
 router.post('/:versionId/publish', validateRequest(versionPublishSchema), async (req: Request, res: Response) => {
   try {
     const { formId } = req.params;
-    const { environment: environmentId, formVersion } = req.body;
+    const { environment: environmentId, formVersion, user } = req.body;
 
     const publishingEnvironment = await prisma.publishingEnvironment.findFirst({
       where: {
@@ -147,7 +150,9 @@ router.post('/:versionId/publish', validateRequest(versionPublishSchema), async 
       // Otherwise, update the current publication to the new version.
       await prisma.formVersionPublication.update({
         data: {
-          versionId: formVersion.id
+          versionId: formVersion.id,
+          createdByUserId: user.id,
+          updatedByUserId: user.id,
         },
         where: {
           id: existingPublication.id
@@ -159,7 +164,9 @@ router.post('/:versionId/publish', validateRequest(versionPublishSchema), async 
       await prisma.formVersionPublication.create({
         data: {
           versionId: formVersion.id,
-          environmentId: publishingEnvironment.id
+          environmentId: publishingEnvironment.id,
+          createdByUserId: user.id,
+          updatedByUserId: user.id,
         }
       });
     }
@@ -168,7 +175,8 @@ router.post('/:versionId/publish', validateRequest(versionPublishSchema), async 
     if (!formVersion.wasPublished) {
       await prisma.formVersion.update({
         data: {
-          wasPublished: true
+          wasPublished: true,
+          updatedByUserId: user.id,
         },
         where: {
           id: formVersion.id

@@ -45,7 +45,9 @@ router.get('/', async (req: Request, res: Response) => {
               }
             }
           }
-        }
+        },
+        createdBy: true,
+        updatedBy: true,
       }
     };
     if (type) {
@@ -79,7 +81,7 @@ router.get('/', async (req: Request, res: Response) => {
 
 router.post('/', validateRequest(createContentBlockSchema), async (req: Request, res: Response) => {
   try {
-    const { name, type, parentIds, childIds } = req.body;
+    const { name, type, parentIds, childIds, user } = req.body;
 
     const parentType = type === 'question' ? 'question-category' : null;
     let parents: Array<ContentBlock> = [];
@@ -133,7 +135,9 @@ router.post('/', validateRequest(createContentBlockSchema), async (req: Request,
     const contentBlock = await prisma.contentBlock.create({
       data: {
         name,
-        type
+        type,
+        createdByUserId: user.id,
+        updatedByUserId: user.id
       }
     });
 
@@ -142,7 +146,9 @@ router.post('/', validateRequest(createContentBlockSchema), async (req: Request,
         parents.map(parent => prisma.childContentBlock.create({
           data: {
             parentId: parent.id,
-            childId: contentBlock.id
+            childId: contentBlock.id,
+            createdByUserId: user.id,
+            updatedByUserId: user.id
           }
         }))
       );
@@ -153,7 +159,9 @@ router.post('/', validateRequest(createContentBlockSchema), async (req: Request,
         children.map(child => prisma.childContentBlock.create({
           data: {
             parentId: contentBlock.id,
-            childId: child.id
+            childId: child.id,
+            createdByUserId: user.id,
+            updatedByUserId: user.id
           }
         }))
       );
@@ -203,7 +211,7 @@ router.get('/:blockId', (req: Request, res: Response) => {
 
 router.patch('/:blockId', validateRequest(patchContentBlockSchema), async (req: Request, res: Response) => {
   try {
-    const { name, contentBlock } = req.body;
+    const { name, contentBlock, user } = req.body;
     const childIds = req.body.childIds || [];
     const parentIds = req.body.parentIds || [];
 
@@ -258,7 +266,9 @@ router.patch('/:blockId', validateRequest(patchContentBlockSchema), async (req: 
         newParents.map(parent => prisma.childContentBlock.create({
           data: {
             parentId: parent.id,
-            childId: contentBlock.id
+            childId: contentBlock.id,
+            createdByUserId: user.id,
+            updatedByUserId: user.id
           }
         }))
       );
@@ -315,7 +325,9 @@ router.patch('/:blockId', validateRequest(patchContentBlockSchema), async (req: 
         newChildren.map(child => prisma.childContentBlock.create({
           data: {
             parentId: contentBlock.id,
-            childId: child.id
+            childId: child.id,
+            createdByUserId: user.id,
+            updatedByUserId: user.id
           }
         }))
       );
@@ -324,7 +336,8 @@ router.patch('/:blockId', validateRequest(patchContentBlockSchema), async (req: 
     // Finally, update the name of the content block based on the request body.
     await prisma.contentBlock.update({
       data: {
-        name
+        name,
+        updatedByUserId: user.id
       },
       where: {
         id: contentBlock.id

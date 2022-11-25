@@ -19,7 +19,12 @@ const router = Router();
 
 router.get('/', async (req: Request, res: Response) => {
   try {
-    const sites = await prisma.site.findMany();
+    const sites = await prisma.site.findMany({
+      include: {
+        createdBy: true,
+        updatedBy: true
+      }
+    });
     res.json({ data: sites });
   } catch (error) {
     console.error(error);
@@ -29,9 +34,14 @@ router.get('/', async (req: Request, res: Response) => {
 
 router.post('/', validateRequest(createSiteSchema), async (req: Request, res: Response) => {
   try {
-    const { name, key } = req.body;
+    const { name, key, user } = req.body;
     const site = await prisma.site.create({
-      data: { name, key }
+      data: {
+        name,
+        key,
+        createdByUserId: user.id,
+        updatedByUserId: user.id,
+      }
     });
     res.json({ data: site });
   } catch (error) {
@@ -82,10 +92,12 @@ router.get('/:siteId', (req: Request, res: Response) => {
 
 router.patch('/:siteId', validateRequest(updateSiteSchema), async (req: Request, res: Response) => {
   try {
-    const { name, key, site } = req.body;
+    const { name, key, site, user } = req.body;
     if (name || key) {
       const query: Prisma.SiteUpdateArgs = {
-        data: {},
+        data: {
+          updatedByUserId: user.id,
+        },
         where: {
           id: site.id
         }
@@ -117,8 +129,8 @@ router.patch('/:siteId', validateRequest(updateSiteSchema), async (req: Request,
 
 router.delete('/:siteId', async (req: Request, res: Response) => {
   try {
-    const { site } = req.body;
-    await deleteSite(site);
+    const { site, user } = req.body;
+    await deleteSite(site, user.id);
 
     res.json({ data: { deleted: true } });
   } catch (error) {

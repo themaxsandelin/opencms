@@ -3,7 +3,7 @@ import { PrismaClient, Page, PageInstance } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-async function updateChildPageInstancePaths(page: Page, localeCode: string, path: string) {
+async function updateChildPageInstancePaths(page: Page, localeCode: string, path: string, userId: string) {
   const instance = await prisma.pageInstance.findFirst({
     where: {
       pageId: page.id,
@@ -15,23 +15,24 @@ async function updateChildPageInstancePaths(page: Page, localeCode: string, path
     const newPath = path ? `${path}${instance.slug}` : '';
     await prisma.pageInstance.update({
       data: {
-        path: newPath
+        path: newPath,
+        updatedByUserId: userId
       },
       where: {
         id: instance.id
       }
     });
-    await updateAllChildPagesInstancePaths(page.id, localeCode, newPath);
+    await updateAllChildPagesInstancePaths(page.id, localeCode, newPath, userId);
   }
 }
 
-export async function updateAllChildPagesInstancePaths(parentId: string, localeCode: string, path: string) {
+export async function updateAllChildPagesInstancePaths(parentId: string, localeCode: string, path: string, userId: string) {
   const childPages = await prisma.page.findMany({
     where: {
       parentId
     }
   });
-  return Promise.all(childPages.map(async (childPage) => updateChildPageInstancePaths(childPage, localeCode, path)));
+  return Promise.all(childPages.map(async (childPage) => updateChildPageInstancePaths(childPage, localeCode, path, userId)));
 }
 
 export async function updateAllPageInstancePaths({
@@ -96,7 +97,7 @@ export async function updateAllPageInstancePaths({
   }
 }
 
-export async function deletePageInstance(page: Page, pageInstance: PageInstance) {
+export async function deletePageInstance(page: Page, pageInstance: PageInstance, userId: string) {
   let path = '';
   if (page.parentId) {
     const parentInstance = await prisma.pageInstance.findFirst({
@@ -109,7 +110,7 @@ export async function deletePageInstance(page: Page, pageInstance: PageInstance)
       path = parentInstance.path;
     }
   }
-  await updateAllChildPagesInstancePaths(page.id, pageInstance.localeCode, path);
+  await updateAllChildPagesInstancePaths(page.id, pageInstance.localeCode, path, userId);
 
   const pageInstanceLayouts = await prisma.pageInstanceLayout.findMany({
     where: {

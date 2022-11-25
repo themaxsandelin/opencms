@@ -29,7 +29,7 @@ router.get('/', async (req: Request, res: Response) => {
 
 router.post('/', validateRequest(createInstanceLayoutSchema), async (req: Request, res: Response) => {
   try {
-    const { layoutId, publishingEnvironmentId, pageInstance } = req.body;
+    const { layoutId, publishingEnvironmentId, pageInstance, user } = req.body;
 
     const environment = await prisma.publishingEnvironment.findFirst({
       where: {
@@ -65,7 +65,9 @@ router.post('/', validateRequest(createInstanceLayoutSchema), async (req: Reques
       data: {
         pageInstanceId: pageInstance.id,
         pageLayoutId: layout.id,
-        publishingEnvironmentId: environment.id
+        publishingEnvironmentId: environment.id,
+        createdByUserId: user.id,
+        updatedByUserId: user.id,
       }
     });
 

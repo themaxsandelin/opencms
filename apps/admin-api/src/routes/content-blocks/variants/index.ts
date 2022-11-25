@@ -42,11 +42,13 @@ router.get('/', async (req: Request, res: Response) => {
 
 router.post('/', validateRequest(createVariantSchema), async (req: Request, res: Response) => {
   try {
-    const { name, sites, contentBlock } = req.body;
+    const { name, sites, contentBlock, user } = req.body;
     const createQuery: Prisma.ContentBlockVariantCreateArgs = {
       data: {
         name,
-        contentBlockId: contentBlock.id
+        contentBlockId: contentBlock.id,
+        createdByUserId: user.id,
+        updatedByUserId: user.id,
       }
     };
     if (sites.length) {
@@ -54,9 +56,19 @@ router.post('/', validateRequest(createVariantSchema), async (req: Request, res:
         create: sites.map((siteId: string) => ({
           site: {
             connect: {
-              id: siteId
+              id: siteId,
             }
-          }
+          },
+          createdBy: {
+            connect: {
+              id: user.id
+            }
+          },
+          updatedBy: {
+            connect: {
+              id: user.id
+            }
+          },
         }))
       }
     }

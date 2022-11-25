@@ -23,6 +23,10 @@ router.get('/', async (req: Request, res: Response) => {
     const forms = await prisma.form.findMany({
       orderBy: {
         updatedAt: 'desc'
+      },
+      include: {
+        createdBy: true,
+        updatedBy: true
       }
     });
 
@@ -35,10 +39,12 @@ router.get('/', async (req: Request, res: Response) => {
 
 router.post('/', validateRequest(createFormSchema), async (req: Request, res: Response) => {
   try {
-    const { name } = req.body;
+    const { name, user } = req.body;
     const form = await prisma.form.create({
       data: {
-        name
+        name,
+        createdByUserId: user.id,
+        updatedByUserId: user.id,
       }
     });
 
@@ -83,11 +89,12 @@ router.get('/:formId', (req: Request, res: Response) => {
 router.patch('/:formId', validateRequest(patchFormSchema), async (req: Request, res: Response) => {
   try {
     const { formId } = req.params;
-    const { name } = req.body;
+    const { name, user } = req.body;
 
     await prisma.form.update({
       data: {
-        name
+        name,
+        updatedByUserId: user.id,
       },
       where: {
         id: formId

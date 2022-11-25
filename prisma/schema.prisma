@@ -19,6 +19,10 @@ model PublishingEnvironment {
   formVersionTokens FormVersionToken[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt @default(now())
+  createdBy User @relation("environmentCreatedByUser", fields: [createdByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdByUserId String
+  updatedBy User @relation("environmentUpdatedByUser", fields: [updatedByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  updatedByUserId String
 }
 
 model Site {
@@ -31,6 +35,10 @@ model Site {
   formVersionTokens FormVersionToken[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt @default(now())
+  createdBy User @relation("siteCreatedByUser", fields: [createdByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdByUserId String
+  updatedBy User @relation("siteUpdatedByUser", fields: [updatedByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  updatedByUserId String
 }
 
 model Page {
@@ -46,6 +54,10 @@ model Page {
   children Page[] @relation("children")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt @default(now())
+  createdBy User @relation("pageCreatedByUser", fields: [createdByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdByUserId String
+  updatedBy User @relation("pageUpdatedByUser", fields: [updatedByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  updatedByUserId String
 }
 
 model PageInstance {
@@ -61,6 +73,10 @@ model PageInstance {
   layouts PageInstanceLayout[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt @default(now())
+  createdBy User @relation("pageInstanceCreatedByUser", fields: [createdByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdByUserId String
+  updatedBy User @relation("pageInstanceUpdatedByUser", fields: [updatedByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  updatedByUserId String
 }
 
 model PageInstanceLayout {
@@ -73,6 +89,10 @@ model PageInstanceLayout {
   publishingEnvironmentId String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt @default(now())
+  createdBy User @relation("pageInstanceLayoutCreatedByUser", fields: [createdByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdByUserId String
+  updatedBy User @relation("pageInstanceLayoutUpdatedByUser", fields: [updatedByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  updatedByUserId String
 }
 
 model PageLayout {
@@ -84,6 +104,10 @@ model PageLayout {
   instances PageInstanceLayout[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt @default(now())
+  createdBy User @relation("pageLayoutCreatedByUser", fields: [createdByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdByUserId String
+  updatedBy User @relation("pageLayoutUpdatedByUser", fields: [updatedByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  updatedByUserId String
 }
 
 model PageLayoutVersion {
@@ -95,6 +119,10 @@ model PageLayoutVersion {
   publications PageLayoutVersionPublication[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt @default(now())
+  createdBy User @relation("pageLayoutVersionCreatedByUser", fields: [createdByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdByUserId String
+  updatedBy User @relation("pageLayoutVersionUpdatedByUser", fields: [updatedByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  updatedByUserId String
 }
 
 model PageLayoutVersionPublication {
@@ -105,6 +133,10 @@ model PageLayoutVersionPublication {
   environmentId String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt @default(now())
+  createdBy User @relation("pageLayoutVersionPublicationCreatedByUser", fields: [createdByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdByUserId String
+  updatedBy User @relation("pageLayoutVersionPublicationUpdatedByUser", fields: [updatedByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  updatedByUserId String
 }
 
 model ContentBlock {
@@ -116,6 +148,10 @@ model ContentBlock {
   variants ContentBlockVariant[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt @default(now())
+  createdBy User @relation("contentBlockCreatedByUser", fields: [createdByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdByUserId String
+  updatedBy User @relation("contentBlockUpdatedByUser", fields: [updatedByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  updatedByUserId String
 }
 
 model ChildContentBlock {
@@ -126,6 +162,10 @@ model ChildContentBlock {
   childId String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt @default(now())
+  createdBy User @relation("childContentBlockCreatedByUser", fields: [createdByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdByUserId String
+  updatedBy User @relation("childContentBlockUpdatedByUser", fields: [updatedByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  updatedByUserId String
 }
 
 model ContentBlockVariant {
@@ -137,6 +177,10 @@ model ContentBlockVariant {
   sites ContentBlockVariantOnSite[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt @default(now())
+  createdBy User @relation("contentBlockVariantCreatedByUser", fields: [createdByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdByUserId String
+  updatedBy User @relation("contentBlockVariantUpdatedByUser", fields: [updatedByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  updatedByUserId String
 }
 
 model ContentBlockVariantOnSite {
@@ -147,6 +191,10 @@ model ContentBlockVariantOnSite {
   siteId String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt @default(now())
+  createdBy User @relation("contentBlockVariantOnSiteCreatedByUser", fields: [createdByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdByUserId String
+  updatedBy User @relation("contentBlockVariantOnSiteUpdatedByUser", fields: [updatedByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  updatedByUserId String
 }
 
 model ContentBlockVariantVersion {
@@ -160,6 +208,10 @@ model ContentBlockVariantVersion {
   publications ContentBlockVariantVersionPublication[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt @default(now())
+  createdBy User @relation("contentBlockVariantVersionCreatedByUser", fields: [createdByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdByUserId String
+  updatedBy User @relation("contentBlockVariantVersionUpdatedByUser", fields: [updatedByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  updatedByUserId String
 }
 
 model ContentBlockVariantVersionPublication {
@@ -170,6 +222,10 @@ model ContentBlockVariantVersionPublication {
   environmentId String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt @default(now())
+  createdBy User @relation("contentBlockVariantVersionPublicationCreatedByUser", fields: [createdByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdByUserId String
+  updatedBy User @relation("contentBlockVariantVersionPublicationUpdatedByUser", fields: [updatedByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  updatedByUserId String
 }
 
 model Form {
@@ -178,6 +234,10 @@ model Form {
   versions FormVersion[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt @default(now())
+  createdBy User @relation("formCreatedByUser", fields: [createdByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdByUserId String
+  updatedBy User @relation("formUpdatedByUser", fields: [updatedByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  updatedByUserId String
 }
 
 model FormVersion {
@@ -191,6 +251,24 @@ model FormVersion {
   tokens FormVersionToken[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt @default(now())
+  createdBy User @relation("formVersionCreatedByUser", fields: [createdByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdByUserId String
+  updatedBy User @relation("formVersionUpdatedByUser", fields: [updatedByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  updatedByUserId String
+}
+
+model FormVersionPublication {
+  id String @id @default(uuid())
+  version FormVersion @relation(fields: [versionId], references: [id])
+  versionId String
+  environment PublishingEnvironment @relation(fields: [environmentId], references: [id])
+  environmentId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt @default(now())
+  createdBy User @relation("formVersionPublicationCreatedByUser", fields: [createdByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdByUserId String
+  updatedBy User @relation("formVersionPublicationUpdatedByUser", fields: [updatedByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  updatedByUserId String
 }
 
 model FormVersionToken {
@@ -233,16 +311,6 @@ model FormVersionSubmissionFile {
   updatedAt DateTime @updatedAt @default(now())
 }
 
-model FormVersionPublication {
-  id String @id @default(uuid())
-  version FormVersion @relation(fields: [versionId], references: [id])
-  versionId String
-  environment PublishingEnvironment @relation(fields: [environmentId], references: [id])
-  environmentId String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt @default(now())
-}
-
 model User {
   id String @id @default(uuid())
   adUsername String
@@ -250,4 +318,38 @@ model User {
   lastName String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt @default(now())
+  createdPublishingEnvironments PublishingEnvironment[] @relation("environmentCreatedByUser")
+  updatedPublishingEnvironments PublishingEnvironment[] @relation("environmentUpdatedByUser")
+  createdSites Site[] @relation("siteCreatedByUser")
+  updatedSites Site[] @relation("siteUpdatedByUser")
+  createdPages Page[] @relation("pageCreatedByUser")
+  updatedPages Page[] @relation("pageUpdatedByUser")
+  createdPageLayouts PageLayout[] @relation("pageLayoutCreatedByUser")
+  updatedPageLayouts PageLayout[] @relation("pageLayoutUpdatedByUser")
+  createdPageLayoutVersions PageLayoutVersion[] @relation("pageLayoutVersionCreatedByUser")
+  updatedPageLayoutVersions PageLayoutVersion[] @relation("pageLayoutVersionUpdatedByUser")
+  createdPageLayoutVersionPublications PageLayoutVersionPublication[] @relation("pageLayoutVersionPublicationCreatedByUser")
+  updatedPageLayoutVersionPublications PageLayoutVersionPublication[] @relation("pageLayoutVersionPublicationUpdatedByUser")
+  createdPageInstances PageInstance[] @relation("pageInstanceCreatedByUser")
+  updatedPageInstances PageInstance[] @relation("pageInstanceUpdatedByUser")
+  createdPageInstanceLayouts PageInstanceLayout[] @relation("pageInstanceLayoutCreatedByUser")
+  updatedPageInstanceLayouts PageInstanceLayout[] @relation("pageInstanceLayoutUpdatedByUser")
+  createdContentBlocks ContentBlock[] @relation("contentBlockCreatedByUser")
+  updatedContentBlocks ContentBlock[] @relation("contentBlockUpdatedByUser")
+  createdChildContentBlocks ChildContentBlock[] @relation("childContentBlockCreatedByUser")
+  updatedChildContentBlocks ChildContentBlock[] @relation("childContentBlockUpdatedByUser")
+  createdContentBlockVariants ContentBlockVariant[] @relation("contentBlockVariantCreatedByUser")
+  updatedContentBlockVariants ContentBlockVariant[] @relation("contentBlockVariantUpdatedByUser")
+  createdContentBlockVariantsOnSites ContentBlockVariantOnSite[] @relation("contentBlockVariantOnSiteCreatedByUser")
+  updatedContentBlockVariantsOnSites ContentBlockVariantOnSite[] @relation("contentBlockVariantOnSiteUpdatedByUser")
+  createdContentBlockVariantVersions ContentBlockVariantVersion[] @relation("contentBlockVariantVersionCreatedByUser")
+  updatedContentBlockVariantVersions ContentBlockVariantVersion[] @relation("contentBlockVariantVersionUpdatedByUser")
+  createdContentBlockVariantVersionPublications ContentBlockVariantVersionPublication[] @relation("contentBlockVariantVersionPublicationCreatedByUser")
+  updatedContentBlockVariantVersionPublications ContentBlockVariantVersionPublication[] @relation("contentBlockVariantVersionPublicationUpdatedByUser")
+  createdForms Form[] @relation("formCreatedByUser")
+  updatedForms Form[] @relation("formUpdatedByUser")
+  createdFormVersions FormVersion[] @relation("formVersionCreatedByUser")
+  updatedFormVersions FormVersion[] @relation("formVersionUpdatedByUser")
+  createdFormVersionPublications FormVersionPublication[] @relation("formVersionPublicationCreatedByUser")
+  updatedFormVersionPublications FormVersionPublication[] @relation("formVersionPublicationUpdatedByUser")
 }

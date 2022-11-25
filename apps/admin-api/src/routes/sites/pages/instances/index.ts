@@ -25,6 +25,10 @@ router.get('/', async (req: Request, res: Response) => {
     const instances = await prisma.pageInstance.findMany({
       where: {
         pageId
+      },
+      include: {
+        createdBy: true,
+        updatedBy: true
       }
     });
 
@@ -37,7 +41,7 @@ router.get('/', async (req: Request, res: Response) => {
 
 router.post('/', validateRequest(createInstanceSchema), async (req: Request, res: Response) => {
   try {
-    const { page, title, description, slug, localeCode } = req.body;
+    const { page, title, description, slug, localeCode, user } = req.body;
 
     const foundLocale = locales.find(locale => locale.code === localeCode);
     if (!foundLocale) {
@@ -79,7 +83,7 @@ router.post('/', validateRequest(createInstanceSchema), async (req: Request, res
     }
 
     if (givenPath) {
-      await updateAllChildPagesInstancePaths(page.id, localeCode, givenPath);
+      await updateAllChildPagesInstancePaths(page.id, localeCode, givenPath, user.id);
     }
 
     const instance = await prisma.pageInstance.create({
@@ -89,7 +93,9 @@ router.post('/', validateRequest(createInstanceSchema), async (req: Request, res
         slug: givenSlug,
         path: givenPath,
         localeCode,
-        pageId: page.id
+        pageId: page.id,
+        createdByUserId: user.id,
+        updatedByUserId: user.id,
       }
     });
 
@@ -140,10 +146,12 @@ router.get('/:instanceId', (req: Request, res: Response) => {
 
 router.patch('/:instanceId', validateRequest(updateInstanceSchema), async (req: Request, res: Response) => {
   try {
-    const { title, description, slug, page, pageInstance, config } = req.body;
+    const { title, description, slug, page, pageInstance, config, user } = req.body;
 
     const updateQuery: Prisma.PageInstanceUpdateArgs = {
-      data: {},
+      data: {
+        updatedByUserId: user.id
+      },
       where: {
         id: pageInstance.id
       }
@@ -182,7 +190,7 @@ router.patch('/:instanceId', validateRequest(updateInstanceSchema), async (req: 
       updateQuery.data.slug = slug;
       updateQuery.data.path = givenPath;
 
-      await updateAllChildPagesInstancePaths(page.id, pageInstance.localeCode, givenPath);
+      await updateAllChildPagesInstancePaths(page.id, pageInstance.localeCode, givenPath, user.id);
     }
 
     await prisma.pageInstance.update(updateQuery);
@@ -196,8 +204,8 @@ router.patch('/:instanceId', validateRequest(updateInstanceSchema), async (req: 
 
 router.delete('/:instanceId', async (req: Request, res: Response) => {
   try {
-    const { page, pageInstance } = req.body;
-    await deletePageInstance(page, pageInstance);
+    const { page, pageInstance, user } = req.body;
+    await deletePageInstance(page, pageInstance, user.id);
 
     res.json({ data: { deleted: true } });
   } catch (error) {

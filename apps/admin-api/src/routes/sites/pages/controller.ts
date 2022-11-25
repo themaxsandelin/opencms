@@ -19,7 +19,7 @@ export async function pageInstanceSlugsAreUniqueOnParentPage(pageId: string, par
   return results.filter(value => value === true).length === 0;
 }
 
-export async function deletePage(page: Page, deleteChildren = false) {
+export async function deletePage(page: Page, userId: string, deleteChildren = false) {
   // First of all, we'll determine if we're going to delete the children as well.
   // In that case, we'll do that first.
   if (deleteChildren) {
@@ -30,7 +30,7 @@ export async function deletePage(page: Page, deleteChildren = false) {
     });
     if (children.length) {
       await Promise.all(
-        children.map(async (childPage) => deletePage(childPage, true))
+        children.map(async (childPage) => deletePage(childPage, userId, true))
       );
     }
   } else {
@@ -77,7 +77,7 @@ export async function deletePage(page: Page, deleteChildren = false) {
   });
   if (instances.length) {
     await Promise.all(
-      instances.map(async (pageInstance) => deletePageInstance(page, pageInstance))
+      instances.map(async (pageInstance) => deletePageInstance(page, pageInstance, userId))
     );
   }
 

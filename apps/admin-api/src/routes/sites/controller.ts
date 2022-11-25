@@ -6,7 +6,7 @@ import { deletePage } from './pages/controller';
 
 const prisma = new PrismaClient();
 
-export async function deleteSite(site: Site) {
+export async function deleteSite(site: Site, userId: string) {
   const siteRootPages = await prisma.page.findMany({
     where: {
       siteId: site.id,
@@ -15,7 +15,7 @@ export async function deleteSite(site: Site) {
   });
   if (siteRootPages.length) {
     // Delete all pages with, including children
-    await Promise.all(siteRootPages.map(page => deletePage(page, true)));
+    await Promise.all(siteRootPages.map(page => deletePage(page, userId, true)));
   }
   return prisma.site.delete({
     where: {
