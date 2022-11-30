@@ -32,14 +32,14 @@ router.get('/', validateRequest(queryContentSchema), async (req: Request, res: R
       let slug = pageInstance.slug;
       let path = pageInstance.path;
       if (pageData) {
-        if (pageData.slug) {
-          slug = pageData.slug;
+        if (pageData.data.slug) {
+          slug = pageData.data.slug;
           path = path.replace('/*', slug);
         }
-        if (pageData.name) {
-          title = pageData.name;
-        } else if (pageData.question) {
-          title = pageData.question;
+        if (pageData.data.name) {
+          title = pageData.data.name;
+        } else if (pageData.data.question) {
+          title = pageData.data.question;
         }
       }
       return {
