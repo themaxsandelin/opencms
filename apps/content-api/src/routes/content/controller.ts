@@ -6,6 +6,40 @@ import { PageInstanceExtended } from '../../types';
 
 const prisma = new PrismaClient();
 
+async function getContentBlockById(id: string, publishingEnvironmentId: string, siteId: string, localeCode: string) {
+  const block = await prisma.contentBlockVariantVersionPublication.findFirst({
+    where: {
+      environment: {
+        id: publishingEnvironmentId
+      },
+      version: {
+        locale: localeCode,
+        variant: {
+          contentBlock: {
+            id,
+          },
+          sites: {
+            some: {
+              siteId: siteId
+            }
+          }
+        }
+      }
+    },
+    include: {
+      version: true
+    }
+  });
+  if (!block) {
+    return null;
+  }
+  const { version } = block;
+  return {
+    ...JSON.parse(version.content),
+    slug: version.slug,
+  };
+}
+
 export async function getPageInstanceData(pageInstance: PageInstance, slug: string, publishingEnvironmentId: string, siteId: string, localeCode: string) {
   let data;
   if (pageInstance.config) {
@@ -41,7 +75,11 @@ export async function getPageInstanceData(pageInstance: PageInstance, slug: stri
                   include: {
                     contentBlock: {
                       include: {
-                        parents: true
+                        parents: {
+                          include: {
+                            parent: true
+                          }
+                        }
                       }
                     }
                   }
@@ -52,9 +90,21 @@ export async function getPageInstanceData(pageInstance: PageInstance, slug: stri
         });
         if (publishedResource) {
           const { version } = publishedResource;
+          const { parents: parentBlocks } = version.variant.contentBlock;
+          let parents = [];
+          if (parentBlocks.length) {
+            parents = await Promise.all(
+              parentBlocks.map(async (parentRef) => getContentBlockById(parentRef.parent.id, publishingEnvironmentId, siteId, localeCode))
+            );
+          }
           data = {
-            ...JSON.parse(version.content),
-            slug
+            resource,
+            resourceType,
+            data: {
+              ...JSON.parse(version.content),
+              slug,
+              parents
+            }
           };
         }
       }
@@ -87,8 +137,7 @@ async function findPageInstanceFromPathPieces(pieces: Array<string>, siteId: str
     }
   });
   if (pageInstance) {
-    const data = await getPageInstanceData(pageInstance, `/${piece}`, environmentId, siteId, localeCode)
-    pageInstance.pageData = data;
+    pageInstance.pageData = await getPageInstanceData(pageInstance, `/${piece}`, environmentId, siteId, localeCode)
 
     const matchingPath = pageInstance.path === paths[0] ? paths[0] : paths[1];
     instances.push(pageInstance);

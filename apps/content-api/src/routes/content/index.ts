@@ -74,7 +74,7 @@ router.get('/', validateRequest(queryContentSchema), async (req: Request, res: R
     });
 
     const content = {
-      data: pageInstance.pageData || {},
+      data: pageInstances.filter(pageInstance => pageInstance.pageData).map(pageInstance => pageInstance.pageData),
       layout: {}
     };
 

@@ -7,7 +7,7 @@ import { validateRequest } from '@open-cms/shared/utils';
 import locales from '@open-cms/shared/locales';
 
 // Utils
-import { getContentBlockParent } from './controller';
+import { getContentBlockParentById, getContentBlockBySlug } from './controller';
 
 // Validation schemas
 import { queryContentBlockSchema } from './schema';
@@ -17,7 +17,7 @@ const router = Router();
 
 router.get('/', validateRequest(queryContentBlockSchema), async (req: Request, res: Response) => {
   try {
-    const { type, environment, locale, site: siteKey, parentSlug } = req.query;
+    const { type, environment, locale, site: siteKey, parentSlug, siblingSlug } = req.query;
 
     const selectedLocale = locales.find(localeObj => localeObj.code.toLowerCase() === (locale as string).toLowerCase());
     if (!selectedLocale) {
@@ -42,44 +42,27 @@ router.get('/', validateRequest(queryContentBlockSchema), async (req: Request, r
       return res.status(400).json({ error: `Could not find a site with the key ${siteKey}` });
     }
 
+    if (parentSlug && siblingSlug) {
+      return res.status(400).json({ error: 'Parameters parentSlug and siblingSlug cannot both be provided. Choose either or.' });
+    }
+
     let parentBlock;
     if (parentSlug) {
       let parentType;
       if (type === 'question') {
         parentType = 'question-category';
       }
-      const parentRef = await prisma.contentBlockVariantVersionPublication.findFirst({
-        where: {
-          environmentId: publishingEnvironment.id,
-          version: {
-            slug: (parentSlug as string),
-            locale: selectedLocale.code,
-            variant: {
-              sites: {
-                some: {
-                  siteId: site.id
-                }
-              },
-              contentBlock: {
-                type: parentType
-              }
-            }
-          }
-        },
-        include: {
-          version: {
-            include: {
-              variant: {
-                include: {
-                  contentBlock: true
-                }
-              }
-            }
-          }
-        }
-      });
+      const parentRef = await getContentBlockBySlug((parentSlug as string), parentType, site.id, publishingEnvironment.id, selectedLocale.code);
       if (parentRef) {
         parentBlock = parentRef.version.variant.contentBlock
+      }
+    }
+
+    let siblingBlock;
+    if (siblingSlug) {
+      const siblingRef = await getContentBlockBySlug((siblingSlug as string), (type as string), site.id, publishingEnvironment.id, selectedLocale.code);
+      if (siblingRef) {
+        siblingBlock = siblingRef.version.variant.contentBlock;
       }
     }
 
@@ -106,7 +89,20 @@ router.get('/', validateRequest(queryContentBlockSchema), async (req: Request, r
         some: {
           parentId: parentBlock.id
         }
-      }
+      };
+    } else if (siblingBlock) {
+      // Exclude sibling from results.
+      blocksQuery.where.version.variant.contentBlock.NOT = {
+        id: siblingBlock.id
+      };
+      const { parents } = siblingBlock;
+      blocksQuery.where.version.variant.contentBlock.parents = {
+        some: {
+          OR: parents.map(({ parentId }) => ({
+            parentId
+          }))
+        }
+      };
     }
     const contentBlocks = await prisma.contentBlockVariantVersionPublication.findMany({
       ...blocksQuery,
@@ -133,7 +129,7 @@ router.get('/', validateRequest(queryContentBlockSchema), async (req: Request, r
         if (contentBlock.version.variant.contentBlock.parents.length) {
           parentBlocks = await Promise.all(
             contentBlock.version.variant.contentBlock.parents.map(async ({ parentId }) => {
-              const parentBlock = await getContentBlockParent(parentId, site.id, publishingEnvironment.id, selectedLocale.code);
+              const parentBlock = await getContentBlockParentById(parentId, site.id, publishingEnvironment.id, selectedLocale.code);
               if (!parentBlock) return null;
               const { version } = parentBlock;
               const content = version.content ? JSON.parse(version.content) : '';
