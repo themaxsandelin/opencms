@@ -4,7 +4,6 @@ import { PrismaClient, Prisma } from '@prisma/client';
 
 // Shared
 import { validateRequest } from '@open-cms/shared/utils';
-import locales from '@open-cms/shared/locales';
 
 // Validation schemas
 import { queryPagesSchema } from './schema';
@@ -14,24 +13,8 @@ const router = Router();
 
 router.get('/', validateRequest(queryPagesSchema), async (req: Request, res: Response) => {
   try {
-    const { slug, path, site: siteKey, locale } = req.query;
-
-    let selectedLocale;
-    if (locale) {
-      selectedLocale = locales.find(localeObj => localeObj.code.toLowerCase() === (locale as string).toLowerCase());
-      if (!selectedLocale) {
-        return res.status(400).json({ error: `The provided locale code ${locale} is not valid.` });
-      }
-    }
-
-    const site = await prisma.site.findFirst({
-      where: {
-        key: (siteKey as string)
-      }
-    });
-    if (!site) {
-      return res.status(400).json({ error: `Could not find a site with the key ${siteKey}` });
-    }
+    const { slug, path } = req.query;
+    const { selectedLocale, site } = req.body;
 
     const query: Prisma.PageInstanceFindManyArgs = {
       where: {

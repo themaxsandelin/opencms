@@ -4,7 +4,6 @@ import { PrismaClient } from '@prisma/client';
 
 // Shared
 import { validateRequest } from '@open-cms/shared/utils';
-import locales from '@open-cms/shared/locales';
 
 // Utils
 import { completeComponentReferences, findPageInstanceListFromPath } from './controller';
@@ -17,30 +16,8 @@ const router = Router();
 
 router.get('/', validateRequest(queryContentSchema), async (req: Request, res: Response) => {
   try {
-    const { pagePath, environment, site: siteKey, locale } = req.query;
-
-    const selectedLocale = locales.find(localeObj => localeObj.code.toLowerCase() === (locale as string).toLowerCase());
-    if (!selectedLocale) {
-      return res.status(400).json({ error: `The provided locale code ${locale} is not valid.` });
-    }
-
-    const publishingEnvironment = await prisma.publishingEnvironment.findFirst({
-      where: {
-        key: (environment as string)
-      }
-    });
-    if (!publishingEnvironment) {
-      return res.status(400).json({ error: 'Invalid or unknown environment key.' });
-    }
-
-    const site = await prisma.site.findFirst({
-      where: {
-        key: (siteKey as string)
-      }
-    });
-    if (!site) {
-      return res.status(400).json({ error: `Could not find a site with the key ${siteKey}` });
-    }
+    const { selectedLocale, publishingEnvironment, site } = req.body;
+    const { pagePath } = req.query;
 
     const pageInstances = await findPageInstanceListFromPath((pagePath as string), site.id, publishingEnvironment.id, selectedLocale.code);
     if (!pageInstances.length) {

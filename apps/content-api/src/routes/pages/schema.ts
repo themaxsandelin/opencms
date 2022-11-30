@@ -15,6 +15,10 @@ export const queryPagesSchema = z.object({
     site: z.string({
       required_error: 'You have to provide the site key using the site query parameter.',
       invalid_type_error: 'The site query parameter has to be a string.'
-    })
+    }),
+    environment: z.string({
+      required_error: 'You have to provide the publishing environment using the environment query parameter.',
+      invalid_type_error: 'The environment query parameter has to be a string.'
+    }),
   })
 });

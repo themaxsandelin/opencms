@@ -45,12 +45,21 @@ router.get('/', async (req: Request, res: Response) => {
 
 router.post('/', validateVersionCreationRequest, async (req: Request, res: Response) => {
   try {
-    const { content, locale, slug, contentBlockVariant, user } = req.body;
+    const { content, localeCode, slug, contentBlockVariant, user } = req.body;
+
+    const locale = await prisma.locale.findFirst({
+      where: {
+        code: localeCode
+      }
+    });
+    if (!locale) {
+      return res.status(400).json({ error: `The locale code ${localeCode} does not exist in the system.` });
+    }
 
     const version = await prisma.contentBlockVariantVersion.create({
       data: {
         content: JSON.stringify(content),
-        locale,
+        locale: localeCode,
         slug,
         contentBlockVariantId: contentBlockVariant.id,
         createdByUserId: user.id,

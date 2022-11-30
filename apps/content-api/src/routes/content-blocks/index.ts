@@ -4,7 +4,6 @@ import { Prisma, PrismaClient } from '@prisma/client';
 
 // Utils
 import { validateRequest } from '@open-cms/shared/utils';
-import locales from '@open-cms/shared/locales';
 
 // Utils
 import { getContentBlockParentById, getContentBlockBySlug } from './controller';
@@ -17,30 +16,8 @@ const router = Router();
 
 router.get('/', validateRequest(queryContentBlockSchema), async (req: Request, res: Response) => {
   try {
-    const { type, environment, locale, site: siteKey, parentSlug, siblingSlug } = req.query;
-
-    const selectedLocale = locales.find(localeObj => localeObj.code.toLowerCase() === (locale as string).toLowerCase());
-    if (!selectedLocale) {
-      return res.status(400).json({ error: `The provided locale code ${locale} is not valid.` });
-    }
-
-    const publishingEnvironment = await prisma.publishingEnvironment.findFirst({
-      where: {
-        key: (environment as string)
-      }
-    });
-    if (!publishingEnvironment) {
-      return res.status(400).json({ error: 'Invalid or unknown environment key.' });
-    }
-
-    const site = await prisma.site.findFirst({
-      where: {
-        key: (siteKey as string)
-      }
-    });
-    if (!site) {
-      return res.status(400).json({ error: `Could not find a site with the key ${siteKey}` });
-    }
+    const { selectedLocale, publishingEnvironment, site } = req.body;
+    const { type, parentSlug, siblingSlug } = req.query;
 
     if (parentSlug && siblingSlug) {
       return res.status(400).json({ error: 'Parameters parentSlug and siblingSlug cannot both be provided. Choose either or.' });
