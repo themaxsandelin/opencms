@@ -11,7 +11,7 @@ import { authorizeUserByToken } from './utils/auth';
 // Load in environment variables
 const { parsed: env } = dotenv.config();
 
-const port = env.PORT || 3100;
+const port = 3000//env.PORT || 3100;
 
 const app: Express = express();
 app.use(express.json());

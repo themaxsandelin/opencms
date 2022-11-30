@@ -1,0 +1,20 @@
+---
+
+- hosts: localhost
+  connection: local
+  tasks:
+  - include_vars:
+      file: "vars/k8s.yml"
+    tags: always
+  - include_vars:
+      dir: "vars/{{ env }}"
+      extensions:
+      - yml
+      ignore_unknown_extensions: true
+    tags: always
+  - { import_tasks: "secrets.yml", tags: ['secrets'] }
+  - block:
+    - include_tasks: "{{ item }}"
+      with_items:
+      - "{{ lookup('fileglob', 'templates/*.yml').split(',') | difference(exclude_list) | sort }}"
+    tags: admin-cms

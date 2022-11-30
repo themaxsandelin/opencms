@@ -1,0 +1,22 @@
+---
+
+- name: Create PersistentVolumeClaim
+  k8s:
+    state: present
+    definition:
+      kind: PersistentVolumeClaim
+      apiVersion: v1
+      metadata:
+        name: "{{ nfs_share.name }}"
+        namespace: "{{ namespace }}"
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        volumeMode: Filesystem
+        resources:
+          requests:
+            storage: "{{ nfs_share.storage_size }}"
+        storageClassName: ""
+        selector:
+          matchLabels:
+            app: "opencms-mirror"

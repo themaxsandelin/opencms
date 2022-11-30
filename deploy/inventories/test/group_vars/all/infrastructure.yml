@@ -1,0 +1,17 @@
+---
+env: test
+
+k8s_context: TEST
+
+# Deprecated
+monitoring:
+  retention: 2d
+  namespaces:
+    - test-web
+    - test-pbx
+    - checkout
+
+# Deprecated
+alerting:
+  alertmanager:
+    replicas: 2

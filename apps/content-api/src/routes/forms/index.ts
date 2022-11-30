@@ -14,7 +14,9 @@ import { getPublishedFormVersion, validateFormData, validateSubmissionFiles, han
 // Load local env variables.
 const { parsed: env } = dotenv.config();
 
-const uploadDir = env ? env.UPLOAD_DIR : process.env.UPLOAD_DIR;
+const uploadDir = "/data"
+// temp fix
+//= env ? env.UPLOAD_DIR : process.env.UPLOAD_DIR;
 if (!uploadDir) {
   console.error('You have to define an upload directory using the environment variable UPLOAD_DIR.');
   process.exit(0);

@@ -1,0 +1,29 @@
+
+namespace: test-web
+
+ingress_host: service-k8s-test.int.ellosgroup.com
+version: latest
+exclude_list:
+-
+
+content_api:
+  port: 3000
+  replicas: 1
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "1Gi"
+
+admin_api:
+  port: 3000
+  replicas: 1
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "1Gi"
+
+nfs_share:
+  path: "/srv/nfs/k8s/test/opencms"
+  server: "nfssrv-tlx-01.rcndmz.ad"
+  storage_size: "5Gi"
+  name: "pvc-opencms"
