@@ -11,7 +11,8 @@ import { formSubmissionSchema } from './schema';
 
 // Controller
 import { getPublishedFormVersion, validateFormData, validateSubmissionFiles, handleSubmissionFiles, deleteRequestFiles, validateFormToken, deleteFormToken } from './controller';
-
+console.log('process env', process.env)
+console.log('nx upload process env', process.env.NX_UPLOAD_DIR)
 const uploadDir = process.env.NX_UPLOAD_DIR;
 if (!uploadDir) {
   console.error('You have to define an upload directory using the environment variable NX_UPLOAD_DIR.');
