@@ -13,7 +13,7 @@ FROM node:16.17.1-bullseye-slim
 RUN apt update && apt -y install openssl && corepack enable && corepack prepare pnpm@latest --activate && apt clean
 COPY --from=0 ./app/prisma ./prisma/ 
 COPY --from=0 ./app/package.json ./app/pnpm-lock.yaml ./app/pnpm-workspace.yaml ./ 
-#COPY --from=0 ./app/node_modules ./node_modules 
+COPY --from=0 ./app/node_modules ./node_modules 
 COPY --from=0 --chown=node:node ./app/dist/apps/admin-api ./ 
 COPY --from=0 --chown=node:node ./app/apps/admin-api/startup.sh ./startup.sh
 
