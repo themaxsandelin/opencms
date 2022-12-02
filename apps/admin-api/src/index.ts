@@ -7,9 +7,12 @@ import router from './routes';
 
 // Utils
 import { authorizeUserByToken } from './utils/auth';
+import { validateEnvVars } from './utils/env';
 
 // Load in environment variables
-const { parsed: env } = dotenv.config();
+const { parsed } = dotenv.config();
+const env = { ...process.env, ...parsed };
+validateEnvVars(env);
 
 const port = env.PORT || 3100;
 
