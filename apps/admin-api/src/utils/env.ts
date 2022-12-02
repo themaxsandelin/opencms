@@ -1,10 +1,10 @@
 export function validateEnvVars(vars: { [index: string]: string }) {
   const requiredVars = [
-    'DATABASE_URL',
-    'UPLOAD_DIR',
-    'AUTH_CLIENT_ID',
-    'AUTH_CLIENT_SECRET',
-    'AUTH_TENANT_ID'
+    'NX_DATABASE_URL',
+    'NX_UPLOAD_DIR',
+    'NX_AUTH_CLIENT_ID',
+    'NX_AUTH_CLIENT_SECRET',
+    'NX_AUTH_TENANT_ID'
   ];
   for (let i = 0; i < requiredVars.length; i++) {
     if (!vars[requiredVars[i]]) {

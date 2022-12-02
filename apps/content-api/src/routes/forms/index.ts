@@ -2,7 +2,6 @@
 import { Router, Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import multer from 'multer';
-import dotenv from 'dotenv';
 
 // Utils
 import { validateRequest } from '@open-cms/shared/utils';
@@ -13,11 +12,7 @@ import { formSubmissionSchema } from './schema';
 // Controller
 import { getPublishedFormVersion, validateFormData, validateSubmissionFiles, handleSubmissionFiles, deleteRequestFiles, validateFormToken, deleteFormToken } from './controller';
 
-// Load local env variables.
-const { parsed } = dotenv.config();
-const env = { ...process.env, ...parsed };
-
-const uploadDir = env ? env.UPLOAD_DIR : process.env.UPLOAD_DIR;
+const uploadDir = process.env.NX_UPLOAD_DIR;
 if (!uploadDir) {
   console.error('You have to define an upload directory using the environment variable UPLOAD_DIR.');
   process.exit(0);

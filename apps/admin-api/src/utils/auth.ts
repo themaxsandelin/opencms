@@ -1,11 +1,6 @@
 // Dependencies
 import jwt from 'jsonwebtoken';
-import dotenv from 'dotenv';
 import { PrismaClient } from '@prisma/client';
-
-// Load in environment variables
-const { parsed } = dotenv.config();
-const env = { ...process.env, ...parsed };
 
 const prisma = new PrismaClient();
 
@@ -30,10 +25,10 @@ async function ensureUserFromToken(upn: string, firstName: string, lastName: str
 export async function authorizeUserByToken(token: string) {
   try {
     const decoded = await jwt.decode(token);
-    if (decoded.appid !== env.AUTH_CLIENT_ID) {
+    if (decoded.appid !== process.env.NX_AUTH_CLIENT_ID) {
       return { valid: false, reason: 'invalid-client' };
     }
-    if (!decoded.iss.includes(env.AUTH_TENANT_ID)) {
+    if (!decoded.iss.includes(process.env.NX_AUTH_TENANT_ID)) {
       return { valid: false, reason: 'invalid-issuer' };
     }
     // TODO: Look into expiration handling of token.
@@ -45,7 +40,7 @@ export async function authorizeUserByToken(token: string) {
 
     return { valid: true, user };
   } catch (error) {
-    console.error('JWT decoding error.');
+    console.error('JWT decoding error.', error);
     return {
       valid: false,
       reason: 'decode-error',
