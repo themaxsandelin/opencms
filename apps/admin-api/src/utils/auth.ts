@@ -27,6 +27,7 @@ async function ensureUserFromToken(upn: string, firstName: string, lastName: str
 
 export async function authorizeUserByToken(token: string) {
   try {
+    console.error(token)
     const decoded = await jwt.decode(token);
     if (decoded.appid !== env.AUTH_CLIENT_ID) {
       return { valid: false, reason: 'invalid-client' };
@@ -43,7 +44,7 @@ export async function authorizeUserByToken(token: string) {
 
     return { valid: true, user };
   } catch (error) {
-    console.error('JWT decoding error.');
+    console.error('JWT decoding error.', error);
     return {
       valid: false,
       reason: 'decode-error',
