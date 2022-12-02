@@ -63,7 +63,7 @@ router.get('/options', async (req: Request, res: Response) => {
     const locales = await prisma.locale.findMany();
 
     res.json({
-      data: localeOptions.filter(localeOption => locales.find(locale => locale.code !== localeOption.code))
+      data: localeOptions.filter(localeOption => !locales.find(locale => locale.code === localeOption.code))
     });
   } catch (error) {
     console.error('Failed to get locale options', error);
