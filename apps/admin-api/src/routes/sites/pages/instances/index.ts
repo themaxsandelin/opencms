@@ -10,7 +10,6 @@ import { updateAllChildPagesInstancePaths, deletePageInstance, siblingPageInstan
 
 // Utils
 import { validateRequest } from '@open-cms/shared/utils';
-import locales from '@open-cms/shared/locales';
 
 // Schemas
 import { createInstanceSchema, updateInstanceSchema } from './schema';
@@ -43,8 +42,12 @@ router.post('/', validateRequest(createInstanceSchema), async (req: Request, res
   try {
     const { page, title, description, slug, localeCode, user } = req.body;
 
-    const foundLocale = locales.find(locale => locale.code === localeCode);
-    if (!foundLocale) {
+    const locale = await prisma.locale.findFirst({
+      where: {
+        code: localeCode
+      }
+    });
+    if (!locale) {
       return res.status(400).json({ error: `The locale code ${localeCode} does not exist in the system.` });
     }
 

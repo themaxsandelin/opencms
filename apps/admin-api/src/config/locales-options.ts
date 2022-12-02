@@ -1,7 +1,7 @@
 // Types
-import { Locale } from '../types';
+import { Locale } from '../types/locales';
 
-const locales: Array<Locale> = [
+const localeOptions: Array<Locale> = [
   {
     code: 'af-ZA',
     name: 'Afrikaans (South Africa)'
@@ -424,7 +424,7 @@ const locales: Array<Locale> = [
   },
   {
     code: 'nb-NO',
-    name: 'Norwegian (Bokm?l) (Norway)'
+    name: 'Norwegian (Bokmål) (Norway)'
   },
   {
     code: 'nl-BE',
@@ -644,4 +644,4 @@ const locales: Array<Locale> = [
   }
 ];
 
-export default locales;
+export default localeOptions;

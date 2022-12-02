@@ -2,7 +2,7 @@
 import { z } from 'zod';
 
 const baseBody = z.object({
-  locale: z.string({
+  localeCode: z.string({
     required_error: 'You have to assign the content version a locale code.'
   }),
   slug: z.string({

@@ -5,8 +5,10 @@ import multer from 'multer';
 import dotenv from 'dotenv';
 
 // Utils
-// import { validateRequest } from '@open-cms/shared/utils';
-import locales from '@open-cms/shared/locales';
+import { validateRequest } from '@open-cms/shared/utils';
+
+// Schemas
+import { formSubmissionSchema } from './schema';
 
 // Controller
 import { getPublishedFormVersion, validateFormData, validateSubmissionFiles, handleSubmissionFiles, deleteRequestFiles, validateFormToken, deleteFormToken } from './controller';
@@ -38,37 +40,11 @@ const upload = multer({
   limits: {},
 });
 
-router.post('/:id', upload.array('files[]'), async (req: Request, res: Response) => {
+router.post('/:id', [validateRequest(formSubmissionSchema), upload.array('files[]')], async (req: Request, res: Response) => {
   try {
-    const { environment, locale, site: siteKey } = req.query;
+    const { selectedLocale, publishingEnvironment, site } = req.body;
     const { id } = req.params;
     const files = req.files as Express.Multer.File[];
-
-    const selectedLocale = locales.find(localeObj => localeObj.code.toLowerCase() === (locale as string).toLowerCase());
-    if (!selectedLocale) {
-      await deleteRequestFiles(files);
-      return res.status(400).json({ error: `The provided locale code ${locale} is not valid.` });
-    }
-
-    const publishingEnvironment = await prisma.publishingEnvironment.findFirst({
-      where: {
-        key: (environment as string)
-      }
-    });
-    if (!publishingEnvironment) {
-      await deleteRequestFiles(files);
-      return res.status(400).json({ error: 'Invalid or unknown environment key.' });
-    }
-
-    const site = await prisma.site.findFirst({
-      where: {
-        key: (siteKey as string)
-      }
-    });
-    if (!site) {
-      await deleteRequestFiles(files);
-      return res.status(400).json({ error: `Could not find a site with the key ${siteKey}` });
-    }
 
     const publishedFormVersion = await getPublishedFormVersion(id, publishingEnvironment.id);
     if (!publishedFormVersion) {

@@ -9,7 +9,7 @@ export async function getContentBlockBySlug(slug: string, type: string, siteId: 
       environmentId,
       version: {
         slug,
-        locale: localeCode,
+        localeCode,
         variant: {
           sites: {
             some: {
@@ -45,7 +45,7 @@ export async function getContentBlockParentById(id: string, siteId: string, envi
     where: {
       environmentId: environmentId,
       version: {
-        locale: localeCode,
+        localeCode,
         variant: {
           sites: {
             some: {

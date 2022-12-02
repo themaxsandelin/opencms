@@ -25,6 +25,18 @@ model PublishingEnvironment {
   updatedByUserId String
 }
 
+model Locale {
+  id String @id @default(uuid())
+  name String
+  code String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt @default(now())
+  createdBy User @relation("localeCreatedByUser", fields: [createdByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdByUserId String
+  updatedBy User @relation("localeUpdatedByUser", fields: [updatedByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  updatedByUserId String
+}
+
 model Site {
   id String @id @default(uuid())
   name String
@@ -200,7 +212,7 @@ model ContentBlockVariantOnSite {
 model ContentBlockVariantVersion {
   id String @id @default(uuid())
   content String @db.NVarChar(MAX)
-  locale String
+  localeCode String @default("")
   slug String @default("")
   wasPublished Boolean @default(false)
   variant ContentBlockVariant @relation(fields: [contentBlockVariantId], references: [id])
@@ -320,6 +332,8 @@ model User {
   updatedAt DateTime @updatedAt @default(now())
   createdPublishingEnvironments PublishingEnvironment[] @relation("environmentCreatedByUser")
   updatedPublishingEnvironments PublishingEnvironment[] @relation("environmentUpdatedByUser")
+  createdLocales Locale[] @relation("localeCreatedByUser")
+  updatedLocales Locale[] @relation("localeUpdatedByUser")
   createdSites Site[] @relation("siteCreatedByUser")
   updatedSites Site[] @relation("siteUpdatedByUser")
   createdPages Page[] @relation("pageCreatedByUser")
