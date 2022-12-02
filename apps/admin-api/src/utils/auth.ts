@@ -4,7 +4,9 @@ import dotenv from 'dotenv';
 import { PrismaClient } from '@prisma/client';
 
 // Load in environment variables
-const { parsed: env } = dotenv.config();
+const { parsed } = dotenv.config();
+const env = { ...process.env, ...parsed };
+
 const prisma = new PrismaClient();
 
 async function ensureUserFromToken(upn: string, firstName: string, lastName: string) {

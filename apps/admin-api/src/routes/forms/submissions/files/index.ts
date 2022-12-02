@@ -4,7 +4,8 @@ import { PrismaClient } from '@prisma/client';
 import { NextFunction, Request, Response, Router } from 'express';
 
 // Load local env variables.
-const { parsed: env } = dotenv.config();
+const { parsed } = dotenv.config();
+const env = { ...process.env, ...parsed };
 
 const uploadDir = env ? env.UPLOAD_DIR : process.env.UPLOAD_DIR;
 if (!uploadDir) {

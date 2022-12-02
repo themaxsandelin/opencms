@@ -14,7 +14,8 @@ import { formSubmissionSchema } from './schema';
 import { getPublishedFormVersion, validateFormData, validateSubmissionFiles, handleSubmissionFiles, deleteRequestFiles, validateFormToken, deleteFormToken } from './controller';
 
 // Load local env variables.
-const { parsed: env } = dotenv.config();
+const { parsed } = dotenv.config();
+const env = { ...process.env, ...parsed };
 
 const uploadDir = env ? env.UPLOAD_DIR : process.env.UPLOAD_DIR;
 if (!uploadDir) {
