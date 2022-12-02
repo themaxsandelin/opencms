@@ -4,7 +4,7 @@ import { NextFunction, Request, Response, Router } from 'express';
 
 const uploadDir = process.env.NX_UPLOAD_DIR;
 if (!uploadDir) {
-  console.error('You have to define an upload directory using the environment variable UPLOAD_DIR.');
+  console.error('You have to define an upload directory using the environment variable NX_UPLOAD_DIR.');
   process.exit(0);
 }
 
