@@ -10,13 +10,13 @@ const router = Router({ mergeParams: true });
 
 router.get('/', async (req: Request, res: Response) => {
   try {
-    const { locale } = req.query;
+    const { localeCode } = req.query;
     const { contentBlockVariant } = req.body;
 
     const versions = await prisma.contentBlockVariantVersion.findMany({
       where: {
         contentBlockVariantId: contentBlockVariant.id,
-        locale: locale ? (locale as string) : {
+        localeCode: localeCode ? (localeCode as string) : {
           not: null
         }
       },
@@ -59,7 +59,7 @@ router.post('/', validateVersionCreationRequest, async (req: Request, res: Respo
     const version = await prisma.contentBlockVariantVersion.create({
       data: {
         content: JSON.stringify(content),
-        locale: localeCode,
+        localeCode,
         slug,
         contentBlockVariantId: contentBlockVariant.id,
         createdByUserId: user.id,
@@ -149,7 +149,7 @@ router.post('/:versionId/publish', validateVersionPublicationRequest(), async (r
       where: {
         environmentId: publishingEnvironment.id,
         version: {
-          locale: contentBlockVariantVersion.locale,
+          localeCode: contentBlockVariantVersion.localeCode,
           variant: {
             contentBlock: {
               id: contentBlock.id

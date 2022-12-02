@@ -47,7 +47,7 @@ router.get('/', validateRequest(queryContentBlockSchema), async (req: Request, r
       where: {
         environmentId: publishingEnvironment.id,
         version: {
-          locale: selectedLocale.code,
+          localeCode: selectedLocale.code,
           variant: {
             sites: {
               some: {
@@ -114,7 +114,7 @@ router.get('/', validateRequest(queryContentBlockSchema), async (req: Request, r
               return {
                 name: content ? content.name : '',
                 slug: version.slug,
-                localeCode: version.locale
+                localeCode: version.localeCode
               };
             })
           );

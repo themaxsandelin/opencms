@@ -13,7 +13,7 @@ async function getContentBlockById(id: string, publishingEnvironmentId: string, 
         id: publishingEnvironmentId
       },
       version: {
-        locale: localeCode,
+        localeCode,
         variant: {
           contentBlock: {
             id,
@@ -55,7 +55,7 @@ export async function getPageInstanceData(pageInstance: PageInstance, slug: stri
             },
             version: {
               slug,
-              locale: localeCode,
+              localeCode,
               variant: {
                 contentBlock: {
                   type: resourceType
