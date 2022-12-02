@@ -1,15 +1,12 @@
 // Dependencies
 import express, { Express } from 'express';
-import dotenv from 'dotenv';
 
 // Main router
 import router from './routes';
 
-dotenv.config();
-
 const app: Express = express();
 app.use(express.json());
-const port = 3000//process.env.PORT || 3200;
+const port = process.env.NX_PORT || 3200;
 
 app.use(router);
 

@@ -1,6 +1,6 @@
 // Dependencies
 import express, { Express } from 'express';
-import dotenv from 'dotenv';
+// import dotenv from 'dotenv';
 
 // Main router
 import router from './routes';
@@ -9,12 +9,9 @@ import router from './routes';
 import { authorizeUserByToken } from './utils/auth';
 import { validateEnvVars } from './utils/env';
 
-// Load in environment variables
-const { parsed } = dotenv.config();
-const env = { ...process.env, ...parsed };
-validateEnvVars(env);
+validateEnvVars(process.env);
 
-const port = 3000//env.PORT || 3100;
+const port = process.env.NX_PORT || 3100;
 
 const app: Express = express();
 app.use(express.json());
