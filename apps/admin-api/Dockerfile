@@ -3,17 +3,17 @@
 #FROM --platform=linux/amd64 node:16.17.1-bullseye-slim AS final
 #RUN apt update && apt -y install openssl && corepack enable && corepack prepare pnpm@latest --activate && apt clean
 
-FROM node:16.17.1-bullseye-slim
+FROM node:16.17.1-bullseye-slim 
 RUN apt update && apt -y install openssl && corepack enable && corepack prepare pnpm@latest --activate && apt clean
 WORKDIR /app
 COPY . .
-RUN pnpm install && pnpm build && npm pkg delete scripts.prepare
+RUN pnpm install --shamefully-hoist && pnpm build && npm pkg delete scripts.prepare
 
 FROM node:16.17.1-bullseye-slim
 RUN apt update && apt -y install openssl && corepack enable && corepack prepare pnpm@latest --activate && apt clean
 COPY --from=0 ./app/prisma ./prisma/ 
 COPY --from=0 ./app/package.json ./app/pnpm-lock.yaml ./app/pnpm-workspace.yaml ./ 
-COPY --from=0 ./app/node_modules ./node_modules 
+#COPY --from=0 ./app/node_modules ./node_modules 
 COPY --from=0 --chown=node:node ./app/dist/apps/admin-api ./ 
 COPY --from=0 --chown=node:node ./app/apps/admin-api/startup.sh ./startup.sh
 
