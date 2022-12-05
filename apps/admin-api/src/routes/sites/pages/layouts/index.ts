@@ -5,9 +5,6 @@ import { PrismaClient } from '@prisma/client';
 // Routers
 import VersionsRouter from './versions';
 
-// Controller
-import { deletePageLayout } from './controller';
-
 // Utils
 import { validateRequest } from '@open-cms/shared/utils';
 
@@ -46,6 +43,16 @@ router.post('/', validateRequest(createLayoutSchema), async (req: Request, res: 
       }
     });
 
+    // Log page update.
+    await prisma.activityLog.create({
+      data: {
+        action: 'create',
+        resourceType: 'page-layout',
+        resourceId: pageLayout.id,
+        createdByUserId: user.id
+      }
+    });
+
     res.json({ data: pageLayout });
   } catch (error) {
     console.error(error);
@@ -77,18 +84,6 @@ router.get('/:layoutId', async (req: Request, res: Response) => {
   try {
     const { pageLayout } = req.body;
     res.json({ data: pageLayout });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-router.delete('/:layoutId', async (req: Request, res: Response) => {
-  try {
-    const { pageLayout } = req.body;
-    await deletePageLayout(pageLayout);
-
-    res.json({ data: { deleted: true } });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });

@@ -5,9 +5,6 @@ import { Prisma, PrismaClient } from '@prisma/client';
 // Routers
 import PageRouter from './pages';
 
-// Controller
-import { deleteSite } from './controller';
-
 // Utils
 import { validateRequest } from '@open-cms/shared/utils';
 
@@ -43,6 +40,17 @@ router.post('/', validateRequest(createSiteSchema), async (req: Request, res: Re
         updatedByUserId: user.id,
       }
     });
+
+    // Log site creation.
+    await prisma.activityLog.create({
+      data: {
+        action: 'create',
+        resourceType: 'site',
+        resourceId: site.id,
+        createdByUserId: user.id
+      }
+    });
+
     res.json({ data: site });
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
@@ -117,22 +125,21 @@ router.patch('/:siteId', validateRequest(updateSiteSchema), async (req: Request,
         query.data.key = key;
       }
       await prisma.site.update(query);
+
+      // Log site update.
+      await prisma.activityLog.create({
+        data: {
+          action: 'update',
+          resourceType: 'site',
+          resourceId: site.id,
+          createdByUserId: user.id
+        }
+      });
+
       res.json({ data: { updated: true } });
     } else {
       res.json({ data: { updated: false } });
     }
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-router.delete('/:siteId', async (req: Request, res: Response) => {
-  try {
-    const { site, user } = req.body;
-    await deleteSite(site, user.id);
-
-    res.json({ data: { deleted: true } });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });

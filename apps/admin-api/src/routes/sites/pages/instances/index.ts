@@ -6,7 +6,7 @@ import { Prisma, PrismaClient } from '@prisma/client';
 import LayoutsRouter from './layouts';
 
 // Controller
-import { updateAllChildPagesInstancePaths, deletePageInstance, siblingPageInstanceExistsWithSlug } from './controller';
+import { updateAllChildPagesInstancePaths, siblingPageInstanceExistsWithSlug } from './controller';
 
 // Utils
 import { validateRequest } from '@open-cms/shared/utils';
@@ -99,6 +99,16 @@ router.post('/', validateRequest(createInstanceSchema), async (req: Request, res
         pageId: page.id,
         createdByUserId: user.id,
         updatedByUserId: user.id,
+      }
+    });
+
+    // Log page instance creation.
+    await prisma.activityLog.create({
+      data: {
+        action: 'create',
+        resourceType: 'page-instance',
+        resourceId: instance.id,
+        createdByUserId: user.id
       }
     });
 
@@ -198,19 +208,17 @@ router.patch('/:instanceId', validateRequest(updateInstanceSchema), async (req: 
 
     await prisma.pageInstance.update(updateQuery);
 
+    // Log page instance update.
+    await prisma.activityLog.create({
+      data: {
+        action: 'update',
+        resourceType: 'page-instance',
+        resourceId: pageInstance.id,
+        createdByUserId: user.id
+      }
+    });
+
     res.json({ data: { updated: true } });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-router.delete('/:instanceId', async (req: Request, res: Response) => {
-  try {
-    const { page, pageInstance, user } = req.body;
-    await deletePageInstance(page, pageInstance, user.id);
-
-    res.json({ data: { deleted: true } });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });

@@ -2,9 +2,6 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
 
-// Controller
-import { deletePageLayoutVersion } from './controller';
-
 // Utils
 import { validateRequest } from '@open-cms/shared/utils';
 
@@ -54,6 +51,16 @@ router.post('/', async (req: Request, res: Response) => {
         pageLayoutId: pageLayout.id,
         createdByUserId: user.id,
         updatedByUserId: user.id,
+      }
+    });
+
+    // Log page layout version creation.
+    await prisma.activityLog.create({
+      data: {
+        action: 'create',
+        resourceType: 'page-layout-version',
+        resourceId: version.id,
+        createdByUserId: user.id
       }
     });
 
@@ -112,19 +119,17 @@ router.patch('/:versionId', async (req: Request, res: Response) => {
       }
     });
 
+    // Log page layout version update.
+    await prisma.activityLog.create({
+      data: {
+        action: 'update',
+        resourceType: 'page-layout-version',
+        resourceId: pageLayoutVersion.id,
+        createdByUserId: user.id
+      }
+    });
+
     res.json({ data: { updated: true } });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-router.delete('/:versionId', async (req: Request, res: Response) => {
-  try {
-    const { pageLayoutVersion } = req.body;
-    await deletePageLayoutVersion(pageLayoutVersion);
-
-    res.json({ data: { deleted: true } });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });
@@ -194,6 +199,17 @@ router.post('/:versionId/publish', validateRequest(publishVersionSchema), async 
         }
       });
     }
+
+    // Log page layout version publishing.
+    await prisma.activityLog.create({
+      data: {
+        action: 'update',
+        resourceType: 'page-layout-version',
+        resourceId: pageLayoutVersion.id,
+        detailText: `Published to ${publishingEnvironment.name}.`,
+        createdByUserId: user.id
+      }
+    });
 
     res.json({ data: { published: true } });
   } catch (error) {

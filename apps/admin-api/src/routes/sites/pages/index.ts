@@ -7,7 +7,7 @@ import LayoutRouter from './layouts';
 import InstancesRouter from './instances';
 
 // Controllers
-import { deletePage, pageInstanceSlugsAreUniqueOnParentPage } from './controller';
+import { pageInstanceSlugsAreUniqueOnParentPage } from './controller';
 import { updateAllPageInstancePaths } from './instances/controller';
 
 // Utils
@@ -87,6 +87,16 @@ router.post('/', validateRequest(createPageSchema), async (req: Request, res: Re
         parentId: parent ? parent.id : null,
         createdByUserId: user.id,
         updatedByUserId: user.id,
+      }
+    });
+
+    // Log page creation.
+    await prisma.activityLog.create({
+      data: {
+        action: 'create',
+        resourceType: 'page',
+        resourceId: page.id,
+        createdByUserId: user.id
       }
     });
 
@@ -211,24 +221,23 @@ router.patch('/:pageId', validateRequest(patchPageSchema), async (req: Request, 
     if (changeOfParentPage || changeOfFrontpage) {
       await updateAllPageInstancePaths({
         page: updatedPage,
+        user,
         changeOfFrontpage,
         changeOfParentPage
       });
     }
 
+    // Log page update.
+    await prisma.activityLog.create({
+      data: {
+        action: 'update',
+        resourceType: 'page',
+        resourceId: page.id,
+        createdByUserId: user.id
+      }
+    });
+
     res.json({ data: { updated: true } });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-router.delete('/:pageId', async (req: Request, res: Response) => {
-  try {
-    const { page, user } = req.body;
-    await deletePage(page, user.id);
-
-    return res.json({ data: { deleted: true } });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });

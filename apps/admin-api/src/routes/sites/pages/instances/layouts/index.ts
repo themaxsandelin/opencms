@@ -71,6 +71,16 @@ router.post('/', validateRequest(createInstanceLayoutSchema), async (req: Reques
       }
     });
 
+    // Log page instance layout creation.
+    await prisma.activityLog.create({
+      data: {
+        action: 'create',
+        resourceType: 'page-instance-layout',
+        resourceId: pageInstanceLayout.id,
+        createdByUserId: user.id
+      }
+    });
+
     res.json({ data: pageInstanceLayout });
   } catch (error) {
     console.error(error);
@@ -93,23 +103,6 @@ router.use('/:pageInstanceLayoutId', async (req: Request, res: Response, next: N
 
     req.body.pageInstanceLayout = pageInstanceLayout;
     next();
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-router.delete('/:pageInstanceLayoutId', async (req: Request, res: Response) => {
-  try {
-    const { pageInstanceLayoutId } = req.params;
-
-    await prisma.pageInstanceLayout.delete({
-      where: {
-        id: pageInstanceLayoutId
-      }
-    });
-
-    res.json({ data: { deleted: true } });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });
