@@ -167,6 +167,16 @@ router.post('/', validateRequest(createContentBlockSchema), async (req: Request,
       );
     }
 
+    // Log content block creation.
+    await prisma.activityLog.create({
+      data: {
+        action: 'create',
+        resourceType: 'contentBlock',
+        resourceId: contentBlock.id,
+        createdByUserId: user.id
+      }
+    });
+
     res.json({ data: contentBlock });
   } catch (error) {
     console.error(error);
@@ -341,6 +351,16 @@ router.patch('/:blockId', validateRequest(patchContentBlockSchema), async (req: 
       },
       where: {
         id: contentBlock.id
+      }
+    });
+
+    // Log content block update.
+    await prisma.activityLog.create({
+      data: {
+        action: 'update',
+        resourceType: 'contentBlock',
+        resourceId: contentBlock.id,
+        createdByUserId: user.id
       }
     });
 

@@ -74,6 +74,17 @@ router.post('/', validateRequest(createVariantSchema), async (req: Request, res:
     }
 
     const variant = await prisma.contentBlockVariant.create(createQuery);
+
+    // Log content block variant update.
+    await prisma.activityLog.create({
+      data: {
+        action: 'create',
+        resourceType: 'contentBlockVariant',
+        resourceId: variant.id,
+        createdByUserId: user.id
+      }
+    });
+
     res.json({ data: variant });
   } catch (error) {
     console.error(error);

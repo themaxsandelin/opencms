@@ -67,6 +67,16 @@ router.post('/', validateVersionCreationRequest, async (req: Request, res: Respo
       }
     });
 
+    // Log content block variant version creation.
+    await prisma.activityLog.create({
+      data: {
+        action: 'create',
+        resourceType: 'contentBlockVariantVersion',
+        resourceId: version.id,
+        createdByUserId: user.id
+      }
+    });
+
     version.content = JSON.parse(version.content);
     return res.json({ data: version });
   } catch (error) {
@@ -122,6 +132,16 @@ router.patch('/:versionId', validateVersionPatchRequest, async (req: Request, re
       },
       where: {
         id: contentBlockVariantVersion.id
+      }
+    });
+
+    // Log content block variant version update.
+    await prisma.activityLog.create({
+      data: {
+        action: 'update',
+        resourceType: 'contentBlockVariantVersion',
+        resourceId: contentBlockVariantVersion.id,
+        createdByUserId: user.id
       }
     });
 
@@ -199,6 +219,17 @@ router.post('/:versionId/publish', validateVersionPublicationRequest(), async (r
         }
       });
     }
+
+    // Log content block variant version publishing.
+    await prisma.activityLog.create({
+      data: {
+        action: 'publish',
+        resourceType: 'contentBlockVariantVersion',
+        resourceId: contentBlockVariantVersion.id,
+        detailText: `Published to ${publishingEnvironment.name}.`,
+        createdByUserId: user.id
+      }
+    });
 
     res.json({ data: { published: true } });
   } catch (error) {
