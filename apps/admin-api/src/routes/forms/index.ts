@@ -2,9 +2,6 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
 
-// Controllers
-import { deleteForm } from './controller';
-
 // Utils
 import { validateRequest } from '@open-cms/shared/utils';
 
@@ -45,6 +42,16 @@ router.post('/', validateRequest(createFormSchema), async (req: Request, res: Re
         name,
         createdByUserId: user.id,
         updatedByUserId: user.id,
+      }
+    });
+
+    // Log form creation.
+    await prisma.activityLog.create({
+      data: {
+        action: 'create',
+        resourceType: 'form',
+        resourceId: form.id,
+        createdByUserId: user.id
       }
     });
 
@@ -101,20 +108,17 @@ router.patch('/:formId', validateRequest(patchFormSchema), async (req: Request, 
       }
     });
 
+    // Log form creation.
+    await prisma.activityLog.create({
+      data: {
+        action: 'update',
+        resourceType: 'form',
+        resourceId: form.id,
+        createdByUserId: user.id
+      }
+    });
+
     res.json({ data: { updated: true } });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-router.delete('/:formId', async (req: Request, res: Response) => {
-  try {
-    const { formId } = req.params;
-
-    await deleteForm(formId);
-
-    res.json({ data: { deleted: true } });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });

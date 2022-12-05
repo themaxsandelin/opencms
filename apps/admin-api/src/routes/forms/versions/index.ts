@@ -56,6 +56,16 @@ router.post('/', async (req: Request, res: Response) => {
       }
     });
 
+    // Log form version creation.
+    await prisma.activityLog.create({
+      data: {
+        action: 'create',
+        resourceType: 'formVersion',
+        resourceId: version.id,
+        createdByUserId: user.id
+      }
+    });
+
     res.json({ data: version });
   } catch (error) {
     console.error(error);
@@ -110,6 +120,16 @@ router.patch('/:versionId', async (req: Request, res: Response) => {
       },
       where: {
         id: formVersion.id
+      }
+    });
+
+    // Log form version update.
+    await prisma.activityLog.create({
+      data: {
+        action: 'create',
+        resourceType: 'formVersion',
+        resourceId: formVersion.id,
+        createdByUserId: user.id
       }
     });
 
@@ -183,6 +203,17 @@ router.post('/:versionId/publish', validateRequest(versionPublishSchema), async 
         }
       });
     }
+
+    // Log form version publication.
+    await prisma.activityLog.create({
+      data: {
+        action: 'publish',
+        resourceType: 'formVersion',
+        resourceId: formVersion.id,
+        detailText: `Published to ${publishingEnvironment.id}.`,
+        createdByUserId: user.id
+      }
+    });
 
     res.json({ data: { published: true } });
   } catch (error) {
