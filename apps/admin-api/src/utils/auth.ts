@@ -16,13 +16,24 @@ async function ensureUserFromToken(upn: string, firstName: string, lastName: str
   if (existing) {
     return existing;
   }
-  return prisma.user.create({
+  const user = await prisma.user.create({
     data: {
       adUsername: upn,
       firstName,
       lastName,
     }
   });
+  // Log publishing environment creation.
+  await prisma.activityLog.create({
+    data: {
+      action: 'create',
+      resourceType: 'user',
+      resourceId: user.id,
+      detailText: `User ${user.firstName} ${user.lastName} logged in for the first time.`,
+      createdByUserId: user.id
+    }
+  });
+  return user;
 }
 
 export async function authorizeUserByToken(token: string) {
