@@ -33,35 +33,17 @@ spec:
         volumeMounts:
         - mountPath: "/data"
           name: "opencms"
-        env:
-        - name: NX_DATABASE_URL
-          valueFrom:
-            secretKeyRef:
-              name: database-url
-              key: database_url
-        - name: NX_UPLOAD_DIR
-          value: {{ upload_dir }}
-        - name: NX_PORT
-          value: "{{ node_port }}"
-        - name: NX_AUTH_CLIENT_ID
-          valueFrom:
-            secretKeyRef:
-              name: auth-client-id
-              key: auth_client_id
-        - name: NX_AUTH_CLIENT_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: auth-client-secret
-              key: auth_client_secret
-        - name: NX_AUTH_TENANT_ID
-          valueFrom:
-            secretKeyRef:
-              name: auth-tenant-id
-              key: auth_tenant_id
+        - mountPath: "/app/env" 
+          name: opnencmsenv
+          readOnly: true
       volumes:
       - name: opencms
         persistentVolumeClaim:
             claimName: pvc-opencms
+      - name: opnencmsenv
+        secret:
+          secretName: env-opencms
+          optional: false
         #readinessProbe:
         #  httpGet:
         #    path: /health/readiness
