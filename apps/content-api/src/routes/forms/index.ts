@@ -36,7 +36,7 @@ const upload = multer({
   limits: {},
 });
 
-router.post('/:id', [validateRequest(formSubmissionSchema), upload.array('files[]')], async (req: Request, res: Response) => {
+router.post('/:id', [upload.array('files[]'), validateRequest(formSubmissionSchema)], async (req: Request, res: Response) => {
   try {
     const { selectedLocale, publishingEnvironment, site } = req.body;
     const { id } = req.params;
