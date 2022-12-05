@@ -17,7 +17,7 @@ router.get('/', async (req: Request, res: Response) => {
       where: {
         contentBlockVariantId: contentBlockVariant.id,
         localeCode: localeCode ? (localeCode as string) : {
-          not: null
+          not: undefined
         }
       },
       include: {
