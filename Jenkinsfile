@@ -298,13 +298,15 @@ pipeline {
             steps {
                 script {
                     docker.image("${DOCKER_REPO}/eg-ansible:latest").inside("-u root") {
-                        withCredentials([kubeconfigContent(credentialsId: 'shoplifter_products_development', variable: 'KUBECONFIG')]) {
+                        withCredentials([kubeconfigContent(credentialsId: 'opencms_development', variable: 'KUBECONFIG'), kubeconfigContent(credentialsId: 'opencms_development_file', variable: 'FILE')]) {
 
                             // Supress output to hide sensitive info
                             sh script: "set +x && echo \"${KUBECONFIG}\" >> ~/kubeconfig  ", returnStdout: false
+                            sh script: "set +x && echo \"${FILE}\" >> ~/file  ", returnStdout: false
+                            
                             sh script: """
                                 cd deploy
-                                KUBECONFIG=~/kubeconfig ansible-playbook deploy.yml -e env=${ENVIRONMENT.toLowerCase()} -e version=${VERSION} -C -vv
+                                KUBECONFIG=~/kubeconfig ansible-playbook deploy.yml -e env=${ENVIRONMENT.toLowerCase()} -e version=${VERSION} --vault-password-file=~/file -C -vv
                             """
                         }
                     }
