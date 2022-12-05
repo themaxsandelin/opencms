@@ -7,12 +7,10 @@ FROM node:16.17.1-bullseye-slim
 RUN apt update && apt -y install openssl && corepack enable && corepack prepare pnpm@latest --activate && apt clean
 WORKDIR /app
 COPY . .
-ENV NX_UPLOAD_DIR "/data"
 RUN pnpm install --shamefully-hoist && pnpm build && npm pkg delete scripts.prepare
 
 FROM node:16.17.1-bullseye-slim
 RUN apt update && apt -y install openssl && corepack enable && corepack prepare pnpm@latest --activate && apt clean
-ENV NX_UPLOAD_DIR "/data"
 COPY --from=0 ./app/prisma ./prisma/ 
 COPY --from=0 ./app/package.json ./app/pnpm-lock.yaml ./app/pnpm-workspace.yaml ./ 
 COPY --from=0 ./app/node_modules ./node_modules 
