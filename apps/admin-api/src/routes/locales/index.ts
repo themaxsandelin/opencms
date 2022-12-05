@@ -51,6 +51,16 @@ router.post('/', validateRequest(createLocaleSchema), async (req: Request, res: 
       }
     });
 
+    // Log locale creation.
+    await prisma.activityLog.create({
+      data: {
+        action: 'create',
+        resourceType: 'locale',
+        resourceId: locale.id,
+        createdByUserId: user.id
+      }
+    });
+
     res.json({ data: locale });
   } catch (error) {
     console.error('Failed to add new locale', error);
