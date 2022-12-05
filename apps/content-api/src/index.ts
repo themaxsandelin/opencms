@@ -4,9 +4,12 @@ import express, { Express } from 'express';
 // Main router
 import router from './routes';
 
+// Workaround NX overwriting env variables at build time.
+const env = {...process}.env;
+
 const app: Express = express();
 app.use(express.json());
-const port = process.env.NX_PORT || 3200;
+const port = env.PORT || 3200;
 
 app.use(router);
 

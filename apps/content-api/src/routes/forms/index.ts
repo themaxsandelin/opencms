@@ -12,9 +12,11 @@ import { formSubmissionSchema } from './schema';
 // Controller
 import { getPublishedFormVersion, validateFormData, validateSubmissionFiles, handleSubmissionFiles, deleteRequestFiles, validateFormToken, deleteFormToken } from './controller';
 
-const uploadDir = process.env.NX_UPLOAD_DIR;
+// Workaround NX overwriting env variables at build time.
+const env = {...process}.env;
+const uploadDir = env.UPLOAD_DIR;
 if (!uploadDir) {
-  console.error('You have to define an upload directory using the environment variable NX_UPLOAD_DIR.');
+  console.error('You have to define an upload directory using the environment variable UPLOAD_DIR.');
   process.exit(0);
 }
 
