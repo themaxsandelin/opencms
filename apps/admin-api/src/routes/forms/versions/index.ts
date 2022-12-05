@@ -210,7 +210,7 @@ router.post('/:versionId/publish', validateRequest(versionPublishSchema), async 
         action: 'publish',
         resourceType: 'formVersion',
         resourceId: formVersion.id,
-        detailText: `Published to ${publishingEnvironment.id}.`,
+        detailText: `Published to ${publishingEnvironment.name}.`,
         createdByUserId: user.id
       }
     });
