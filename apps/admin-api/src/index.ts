@@ -1,6 +1,5 @@
 // Dependencies
 import express, { Express } from 'express';
-// import dotenv from 'dotenv';
 
 // Main router
 import router from './routes';
@@ -9,9 +8,11 @@ import router from './routes';
 import { authorizeUserByToken } from './utils/auth';
 import { validateEnvVars } from './utils/env';
 
-validateEnvVars(process.env);
+// Workaround NX overwriting env variables at build time.
+const env = {...process}.env;
+validateEnvVars(env);
 
-const port = process.env.NX_PORT || 3100;
+const port = env.PORT || 3100;
 
 const app: Express = express();
 app.use(express.json());

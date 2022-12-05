@@ -2,6 +2,9 @@
 import jwt from 'jsonwebtoken';
 import { PrismaClient } from '@prisma/client';
 
+// Workaround NX overwriting env variables at build time.
+const env = {...process}.env;
+
 const prisma = new PrismaClient();
 
 async function ensureUserFromToken(upn: string, firstName: string, lastName: string) {
@@ -26,10 +29,10 @@ export async function authorizeUserByToken(token: string) {
   try {
     console.error(token)
     const decoded = await jwt.decode(token);
-    if (decoded.appid !== process.env.NX_AUTH_CLIENT_ID) {
+    if (decoded.appid !== env.AUTH_CLIENT_ID) {
       return { valid: false, reason: 'invalid-client' };
     }
-    if (!decoded.iss.includes(process.env.NX_AUTH_TENANT_ID)) {
+    if (!decoded.iss.includes(env.AUTH_TENANT_ID)) {
       return { valid: false, reason: 'invalid-issuer' };
     }
     // TODO: Look into expiration handling of token.
