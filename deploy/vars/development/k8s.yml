@@ -2,7 +2,7 @@
 namespace: dev-web
 
 ingress_host: service-k8s-dev.int.ellosgroup.com
-version: ada3568796e31a4b88bfad0a7c3b0ef7c0dcc964-jenkins_deploy_dev-experimental-33
+version: f29fc458ff12c9d23b643e26e8ab6752c68ff959-jenkins_deploy_dev-experimental-32
 exclude_list:
 -
 
