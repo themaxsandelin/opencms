@@ -113,7 +113,7 @@ router.patch('/:formId', validateRequest(patchFormSchema), async (req: Request, 
       data: {
         action: 'update',
         resourceType: 'form',
-        resourceId: form.id,
+        resourceId: formId,
         createdByUserId: user.id
       }
     });
