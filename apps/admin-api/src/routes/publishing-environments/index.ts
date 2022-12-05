@@ -39,6 +39,16 @@ router.post('/', validateRequest(createPublishingEnvironmentSchema), async (req:
       }
     });
 
+    // Log publishing environment creation.
+    await prisma.activityLog.create({
+      data: {
+        action: 'create',
+        resourceType: 'publishingEnvironment',
+        resourceId: publishingEnvironment.id,
+        createdByUserId: user.id
+      }
+    });
+
     res.json({ data: publishingEnvironment });
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
@@ -74,20 +84,6 @@ router.get('/:id', async (req: Request, res: Response) => {
   try {
     const { publishingEnvironment } = req.body;
     res.json({ data: publishingEnvironment });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-router.delete('/:id', async (req: Request, res: Response) => {
-  try {
-    await prisma.publishingEnvironment.delete({
-      where: {
-        id: req.body.publishingEnvironment.id
-      }
-    });
-    res.json({ data: { deleted: true } });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });
