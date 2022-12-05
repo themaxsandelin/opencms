@@ -1,4 +1,3 @@
 #!/bin/sh
-pnpm prisma generate
-pnpm prisma migrate dev
+pnpm prisma migrate deploy
 node main.js

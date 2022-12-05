@@ -1,0 +1,25 @@
+---
+- name: Create PersistentVolume
+  k8s:
+    state: present
+    definition:
+      kind: PersistentVolume
+      apiVersion: v1
+      metadata:
+        name: "{{ nfs_share.name }}"
+        labels:
+          app: "opencms-mirror"
+      spec:
+        capacity:
+          storage: "{{ nfs_share.storage_size }}"
+        volumeMode: Filesystem
+        accessModes:
+          - ReadWriteOnce
+        persistentVolumeReclaimPolicy: Recycle
+        storageClassName: ""
+        mountOptions:
+          - hard
+          - nfsvers=4.1
+        nfs:
+          path: "{{ nfs_share.path }}"
+          server: "{{ nfs_share.server }}"

@@ -1,0 +1,6 @@
+{
+    "jira-uri": "https://ellosgroup.atlassian.net",
+    "teams-web-hook": "https://ellosgroup.webhook.office.com/webhookb2/a47ef4c5-c313-430f-a114-ba3cc6175154@4ee482de-f628-49ba-b8da-d488d8ec7ca5/IncomingWebhook/4d7999adf4524aa7ae8bfe81c916b908/318b1277-33e1-4d54-a43e-834f465fb55c",
+    "release-prefix": "v",
+    "jira-release-name-prefix": "OpenCMS"
+}

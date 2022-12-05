@@ -1,0 +1,40 @@
+---
+
+- name: "service-{{ basename }}-admin-api"
+  k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Service
+      metadata:
+        name: "{{ basename }}-admin-api"
+        labels:
+          app: "{{ basename }}-admin-api"
+        namespace: "{{ namespace }}"
+      spec:
+        ports:
+        - name: web
+          port: 80
+          protocol: TCP
+          targetPort: web
+        selector:
+          app: "{{ basename }}-admin-api"
+- name: "service-{{ basename }}-content-api"
+  k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Service
+      metadata:
+        name: "{{ basename }}-content-api"
+        labels:
+          app: "{{ basename }}-content-api"
+        namespace: "{{ namespace }}"
+      spec:
+        ports:
+        - name: web
+          port: 80
+          protocol: TCP
+          targetPort: web
+        selector:
+          app: "{{ basename }}-content-api"

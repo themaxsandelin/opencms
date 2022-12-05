@@ -1,0 +1,5 @@
+# Common vars for all environments
+
+basename: opencms-mirror
+upload_dir: "data/"
+node_port: 3000

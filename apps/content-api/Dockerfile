@@ -1,22 +1,21 @@
-FROM --platform=linux/amd64 node:16.17.1-alpine
+#Jenkins to old cant use
+#Image to run final build on
+#FROM --platform=linux/amd64 node:16.17.1-bullseye-slim AS final
+#RUN apt update && apt -y install openssl && corepack enable && corepack prepare pnpm@latest --activate && apt clean
 
+FROM node:16.17.1-bullseye-slim
+RUN apt update && apt -y install openssl && corepack enable && corepack prepare pnpm@latest --activate && apt clean
 WORKDIR /app
+COPY . .
+RUN pnpm install  --shamefully-hoist && pnpm build content-api && npm pkg delete scripts.prepare
 
-# Install pnpm and prepare for running pnpm install.
-RUN apk add --no-cache libc6-compat
-RUN apk add --update python3 make g++ && rm -rf /var/cache/apk/*
-RUN apk --no-cache add openssl libc6-compat
-RUN apk add --no-cache --upgrade bash
-RUN corepack enable && corepack prepare pnpm@latest --activate
-COPY prisma ./prisma/
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-RUN npm pkg delete scripts.prepare
-
-# Possibly install pnpm here.
-RUN pnpm install
-
-COPY --chown=node:node ./dist/apps/content-api ./
-COPY --chown=node:node ./apps/content-api/startup.sh ./startup.sh
+FROM node:16.17.1-bullseye-slim
+RUN apt update && apt -y install openssl && corepack enable && corepack prepare pnpm@latest --activate && apt clean
+COPY --from=0 ./app/prisma ./prisma/ 
+COPY --from=0 ./app/package.json ./app/pnpm-lock.yaml ./app/pnpm-workspace.yaml ./ 
+COPY --from=0 ./app/node_modules ./node_modules 
+COPY --from=0 --chown=node:node ./app/dist/apps/content-api ./ 
+COPY --from=0 --chown=node:node ./app/apps/content-api/startup.sh ./startup.sh
 
 EXPOSE 3000
 ENV PORT 3000

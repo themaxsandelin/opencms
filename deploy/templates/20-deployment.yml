@@ -1,0 +1,14 @@
+---
+
+- name: "deployment-{{ basename }}-admin-api"
+  k8s:
+    state: present
+    force: true
+    definition: "{{ lookup('template', 'admin-api-deployment.yaml.j2') }}"
+
+- name: "deployment-{{ basename }}-content-api"
+  k8s:
+    state: present
+    force: true
+    definition: "{{ lookup('template', 'content-api-deployment.yaml.j2') }}"
+    
