@@ -1,7 +1,8 @@
 ---
 
 - hosts: localhost
-  connection: local
+  environment:
+    K8S_AUTH_CONTEXT: "{{ env | upper }}"
   tasks:
   - include_vars:
       file: "vars/k8s.yml"
