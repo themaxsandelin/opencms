@@ -1,15 +1,11 @@
 // Dependencies
-import dotenv from 'dotenv';
 import { PrismaClient } from '@prisma/client';
 import { NextFunction, Request, Response, Router } from 'express';
 
-const { parsed } = dotenv.config();
-const env = { ...process.env, ...parsed };
-
-const uploadDir = env ? env.NX_UPLOAD_DIR : process.env.NX_UPLOAD_DIR;
+const uploadDir = process.env.NX_UPLOAD_DIR;
 if (!uploadDir) {
   console.error('You have to define an upload directory using the environment variable NX_UPLOAD_DIR.');
-  //process.exit(0);
+  process.exit(0);
 }
 
 const prisma = new PrismaClient();
