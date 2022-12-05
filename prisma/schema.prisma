@@ -7,6 +7,17 @@ datasource db {
   url = env("DATABASE_URL")
 }
 
+model ActivityLog {
+  id String @id @default(uuid())
+  action String
+  resourceType String
+  resourceId String
+  detailText String @default("")
+  createdAt DateTime @default(now())
+  createdBy User @relation("logCreatedByUser", fields: [createdByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdByUserId String
+}
+
 model PublishingEnvironment {
   id String @id @default(uuid())
   name String
@@ -366,4 +377,5 @@ model User {
   updatedFormVersions FormVersion[] @relation("formVersionUpdatedByUser")
   createdFormVersionPublications FormVersionPublication[] @relation("formVersionPublicationCreatedByUser")
   updatedFormVersionPublications FormVersionPublication[] @relation("formVersionPublicationUpdatedByUser")
+  createdLogs ActivityLog[] @relation("logCreatedByUser")
 }

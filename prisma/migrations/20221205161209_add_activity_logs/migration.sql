@@ -1,0 +1,30 @@
+BEGIN TRY
+
+BEGIN TRAN;
+
+-- CreateTable
+CREATE TABLE [dbo].[ActivityLog] (
+    [id] NVARCHAR(1000) NOT NULL,
+    [action] NVARCHAR(1000) NOT NULL,
+    [resourceType] NVARCHAR(1000) NOT NULL,
+    [resourceId] NVARCHAR(1000) NOT NULL,
+    [createdAt] DATETIME2 NOT NULL CONSTRAINT [ActivityLog_createdAt_df] DEFAULT CURRENT_TIMESTAMP,
+    [createdByUserId] NVARCHAR(1000) NOT NULL,
+    CONSTRAINT [ActivityLog_pkey] PRIMARY KEY CLUSTERED ([id])
+);
+
+-- AddForeignKey
+ALTER TABLE [dbo].[ActivityLog] ADD CONSTRAINT [ActivityLog_createdByUserId_fkey] FOREIGN KEY ([createdByUserId]) REFERENCES [dbo].[User]([id]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+COMMIT TRAN;
+
+END TRY
+BEGIN CATCH
+
+IF @@TRANCOUNT > 0
+BEGIN
+    ROLLBACK TRAN;
+END;
+THROW
+
+END CATCH
