@@ -58,7 +58,7 @@ router.post('/', async (req: Request, res: Response) => {
     await prisma.activityLog.create({
       data: {
         action: 'create',
-        resourceType: 'page-layout-version',
+        resourceType: 'pageLayoutVersion',
         resourceId: version.id,
         createdByUserId: user.id
       }
@@ -123,7 +123,7 @@ router.patch('/:versionId', async (req: Request, res: Response) => {
     await prisma.activityLog.create({
       data: {
         action: 'update',
-        resourceType: 'page-layout-version',
+        resourceType: 'pageLayoutVersion',
         resourceId: pageLayoutVersion.id,
         createdByUserId: user.id
       }
@@ -204,7 +204,7 @@ router.post('/:versionId/publish', validateRequest(publishVersionSchema), async 
     await prisma.activityLog.create({
       data: {
         action: 'update',
-        resourceType: 'page-layout-version',
+        resourceType: 'pageLayoutVersion',
         resourceId: pageLayoutVersion.id,
         detailText: `Published to ${publishingEnvironment.name}.`,
         createdByUserId: user.id

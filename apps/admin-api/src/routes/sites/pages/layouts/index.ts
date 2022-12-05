@@ -47,7 +47,7 @@ router.post('/', validateRequest(createLayoutSchema), async (req: Request, res: 
     await prisma.activityLog.create({
       data: {
         action: 'create',
-        resourceType: 'page-layout',
+        resourceType: 'pageLayout',
         resourceId: pageLayout.id,
         createdByUserId: user.id
       }

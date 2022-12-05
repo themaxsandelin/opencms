@@ -26,7 +26,7 @@ async function updateChildPageInstancePaths(page: Page, localeCode: string, path
     await prisma.activityLog.create({
       data: {
         action: 'update',
-        resourceType: 'page-instance',
+        resourceType: 'pageInstance',
         resourceId: instance.id,
         createdByUserId: userId
       }
@@ -95,7 +95,7 @@ export async function updateAllPageInstancePaths({
       await prisma.activityLog.create({
         data: {
           action: 'update',
-          resourceType: 'page-instance',
+          resourceType: 'pageInstance',
           resourceId: pageInstance.id,
           createdByUserId: user.id
         }

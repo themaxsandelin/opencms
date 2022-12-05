@@ -106,7 +106,7 @@ router.post('/', validateRequest(createInstanceSchema), async (req: Request, res
     await prisma.activityLog.create({
       data: {
         action: 'create',
-        resourceType: 'page-instance',
+        resourceType: 'pageInstance',
         resourceId: instance.id,
         createdByUserId: user.id
       }
@@ -212,7 +212,7 @@ router.patch('/:instanceId', validateRequest(updateInstanceSchema), async (req: 
     await prisma.activityLog.create({
       data: {
         action: 'update',
-        resourceType: 'page-instance',
+        resourceType: 'pageInstance',
         resourceId: pageInstance.id,
         createdByUserId: user.id
       }

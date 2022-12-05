@@ -75,7 +75,7 @@ router.post('/', validateRequest(createInstanceLayoutSchema), async (req: Reques
     await prisma.activityLog.create({
       data: {
         action: 'create',
-        resourceType: 'page-instance-layout',
+        resourceType: 'pageInstanceLayout',
         resourceId: pageInstanceLayout.id,
         createdByUserId: user.id
       }
