@@ -2,7 +2,7 @@
 namespace: test-web
 
 ingress_host: service-k8s-test.int.ellosgroup.com
-version: 6ad0b5f90fbd5b78e7b1ad38f7dd25746b442afa-jenkins_deploy_dev-experimental-27
+version: 7cda2ab0ce63f30a6491dd858c2e49f91b04ec54-jenkins_deploy_dev-experimental-37
 exclude_list:
 -
 
