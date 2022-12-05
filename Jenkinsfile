@@ -87,7 +87,7 @@ pipeline {
                                     ),
                                     choice(
                                             name: "ENVIRONMENT",
-                                            choices: "Dev\nTest\nProd",
+                                            choices: "Development\nTest\nProd",
                                             description: "Which environment to deploy to?"
                                     )
                             ]
@@ -146,21 +146,13 @@ pipeline {
                                 submoduleCfg: [],
                                 userRemoteConfigs: [[url: env.GIT_REPO]]
                         ])
-                        def props = readProperties  file:'Jenkinsfile.properties'
-                        NAMESPACE_SUFFIX= props['web']
-                        SYSTEM_NAME = props['opencms']
-                        def useProjectAsBaseName = (props['project-as-basename'] ?: true).toBoolean()
+                        NAMESPACE_SUFFIX = "web"
+                        SYSTEM_NAME = "opencms"
                         echo "Namespace suffix: ${NAMESPACE_SUFFIX}"
                         echo "System name: ${SYSTEM_NAME}"
-                        TASKS = ['apps/admin-api', 'apps/content-api']
+                        TASKS = ['opencms-mirror-admin-api', 'opencms-mirror-content-api']
                         // Default base name as the git project name
-                        if (useProjectAsBaseName == true) {
-                            echo "useProjectAsBaseName is true, set project name as basename"
-                            BASE_NAME = "${env.GIT_REPO}".tokenize('/')[3].split("\\.")[0].toLowerCase() + "-"
-                        } else {
-                            BASE_NAME = ""
-                            echo "Basename is set as empty string"
-                        }
+                        BASE_NAME = "${env.GIT_REPO}".tokenize('/')[3].split("\\.")[0].toLowerCase() + "-"
                     }
                 }
             }
@@ -275,7 +267,7 @@ pipeline {
             }
             steps {
                 script {
-                    K8S_NAMESPACE = "${ENVIRONMENT}-${NAMESPACE_SUFFIX}".toLowerCase()
+                    K8S_NAMESPACE = "${getShorthandNamespace(ENVIRONMENT)}-${NAMESPACE_SUFFIX}".toLowerCase()
                     APPLICATION = TASKS.first()
                     PREVIOUSVERSION = sh (
                             script: """
@@ -306,7 +298,7 @@ pipeline {
                             
                             sh script: """
                                 cd deploy
-                                KUBECONFIG=~/kubeconfig ansible-playbook deploy.yml -e env=${ENVIRONMENT.toLowerCase()} -e version=${VERSION} --vault-password-file=~/file -C -vv
+                                KUBECONFIG=~/kubeconfig ansible-playbook deploy.yml -e env=${ENVIRONMENT.toLowerCase()} -e version=${VERSION} --vault-password-file=~/file -C
                             """
                         }
                     }
@@ -386,7 +378,7 @@ pipeline {
 }
 
 def getK8sContext(targetEnv) {
-    if (targetEnv.equalsIgnoreCase("dev")) {
+    if (targetEnv.equalsIgnoreCase("development")) {
         return "dev-web";
     } else if (targetEnv.equalsIgnoreCase("test")) {
         return "cluster.local";
@@ -395,11 +387,20 @@ def getK8sContext(targetEnv) {
     }
 }
 def getK8sConfig(targetEnv) {
-    if (targetEnv.equalsIgnoreCase("dev")) {
+    if (targetEnv.equalsIgnoreCase("development")) {
         return "config-dev";
     } else if (targetEnv.equalsIgnoreCase("test")) {
         return "config-test";
     } else if (targetEnv.equalsIgnoreCase("prod")) {
         return "config-prod-02";
+    }
+}
+def getShorthandNamespace(targetEnv) {
+    if (targetEnv.equalsIgnoreCase("development")) {
+        return "dev";
+    } else if (targetEnv.equalsIgnoreCase("test")) {
+        return "test";
+    } else if (targetEnv.equalsIgnoreCase("prod")) {
+        return "prod";
     }
 }
