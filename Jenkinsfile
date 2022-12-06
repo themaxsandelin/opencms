@@ -298,7 +298,7 @@ pipeline {
                             
                             sh script: """
                                 cd deploy
-                                KUBECONFIG=~/kubeconfig ansible-playbook deploy.yml -e env=${ENVIRONMENT.toLowerCase()} -e version=${VERSION} --vault-password-file=~/file -C
+                                KUBECONFIG=~/kubeconfig ansible-playbook deploy.yml -e env=${ENVIRONMENT.toLowerCase()} -e version=${VERSION} -t admin-cms --vault-password-file=~/file
                             """
                         }
                     }
