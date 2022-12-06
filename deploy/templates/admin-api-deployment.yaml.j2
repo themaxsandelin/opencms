@@ -15,9 +15,9 @@ spec:
         prometheus: nodejs
     spec:      
       securityContext:
-        runAsUser: 1000
-        runAsGroup: 1000
-        fsGroup: 1000
+        runAsUser: 65534
+        runAsGroup: 65534
+        fsGroup: 65534
       containers:
       - name: "{{ basename }}-admin-api"
         image: "registry1.redcatsnordic.ad:5000/{{ basename }}-admin-api:{{ version }}"

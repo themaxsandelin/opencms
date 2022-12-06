@@ -7,11 +7,11 @@
       kind: PersistentVolumeClaim
       apiVersion: v1
       metadata:
-        name: "{{ nfs_share.name }}"
+        name: "pvc-opencms"
         namespace: "{{ namespace }}"
       spec:
         accessModes:
-          - ReadWriteOnce
+          - ReadWriteMany
         volumeMode: Filesystem
         resources:
           requests:

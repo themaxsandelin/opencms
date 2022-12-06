@@ -6,7 +6,7 @@
       kind: PersistentVolume
       apiVersion: v1
       metadata:
-        name: "{{ nfs_share.name }}"
+        name: "pv-opencms"
         labels:
           app: "opencms-mirror"
       spec:
@@ -14,7 +14,7 @@
           storage: "{{ nfs_share.storage_size }}"
         volumeMode: Filesystem
         accessModes:
-          - ReadWriteOnce
+          - ReadWriteMany
         persistentVolumeReclaimPolicy: Recycle
         storageClassName: ""
         mountOptions:
