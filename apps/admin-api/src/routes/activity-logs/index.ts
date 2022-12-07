@@ -13,10 +13,13 @@ const router = Router();
 
 router.get('/', validateRequest(getActivityLogs), async (req: Request, res: Response) => {
   try {
-    const { search, page } = req.query;
+    const { search, page, sortBy, sort } = req.query;
     const take = 20;
     const pageNum = parseInt(page as string);
     const skip = take * (pageNum - 1);
+
+    const sortByKey = (sortBy as string) || 'createdAt';
+    const sortOrder = (sort as string) || 'desc';
 
     const activityLogQuery: Prisma.ActivityLogFindManyArgs = {
       take,
@@ -25,16 +28,14 @@ router.get('/', validateRequest(getActivityLogs), async (req: Request, res: Resp
       include: {
         createdBy: true
       },
-      orderBy: {
-        createdAt: 'desc'
-      }
+      orderBy: {}
     };
     const countQuery: Prisma.ActivityLogCountArgs = {
       where: {},
-      orderBy: {
-        createdAt: 'desc'
-      }
+      orderBy: {}
     }
+    activityLogQuery.orderBy[sortByKey] = sortOrder;
+    countQuery.orderBy[sortByKey] = sortOrder;
     if (search) {
       const where = {
         OR: [
