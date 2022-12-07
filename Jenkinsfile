@@ -184,7 +184,7 @@ pipeline {
             steps {
                 sshagent (credentials: ['automation-ssh']) {
                     script {
-                        if (GIT_REFERENCE == 'master') {
+                        if (GIT_REFERENCE == 'main') {
                             VERSION = sh(
                                     script: """
                                     set +x
@@ -290,7 +290,7 @@ pipeline {
             steps {
                 script {
                     docker.image("${DOCKER_REPO}/eg-ansible:latest").inside("-u root") {
-                        withCredentials([kubeconfigContent(credentialsId: 'opencms_development', variable: 'KUBECONFIG'), kubeconfigContent(credentialsId: 'opencms_development_file', variable: 'FILE')]) {
+                        withCredentials([kubeconfigContent(credentialsId: "opencms_${ENVIRONMENT.toLowerCase()}", variable: 'KUBECONFIG'), kubeconfigContent(credentialsId: 'opencms_development_file', variable: 'FILE')]) {
 
                             // Supress output to hide sensitive info
                             sh script: "set +x && echo \"${KUBECONFIG}\" >> ~/kubeconfig  ", returnStdout: false
