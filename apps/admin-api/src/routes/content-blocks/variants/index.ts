@@ -9,7 +9,7 @@ import VersionRouter from './versions';
 import { validateRequest } from '@open-cms/shared/utils';
 
 // Validation schema
-import { createVariantSchema } from './schema';
+import { createVariantSchema, patchVariantSchema } from './schema';
 
 const prisma = new PrismaClient();
 const router = Router({ mergeParams: true });
@@ -116,6 +116,15 @@ router.get('/:variantId', async (req: Request, res: Response) => {
   try {
     const { contentBlockVariant } = req.body;
 
+    const variantOnSites = await prisma.contentBlockVariantOnSite.findMany({
+      where: {
+        variantId: contentBlockVariant.id
+      },
+      include: {
+        site: true
+      }
+    });
+
     // TODO: Incorporate the user here to determine the right version to show based on who's signed in.
     // I.e. we need to track who updated the version.
     const latestVersion = await prisma.contentBlockVariantVersion.findFirst({
@@ -133,9 +142,83 @@ router.get('/:variantId', async (req: Request, res: Response) => {
     res.json({
       data: {
         ...contentBlockVariant,
-        latestVersion: latestVersion || null
+        latestVersion: latestVersion || null,
+        sites: variantOnSites.map(variantOnSite => variantOnSite.site)
       }
     });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.patch('/:variantId', validateRequest(patchVariantSchema), async (req: Request, res: Response) => {
+  try {
+    const { name, sites, contentBlockVariant, user } = req.body;
+
+    if (name || sites) {
+      if (name) {
+        await prisma.contentBlockVariant.update({
+          where: {
+            id: contentBlockVariant.id,
+          },
+          data: {
+            name,
+            updatedByUserId: user.id
+          }
+        });
+      }
+
+      if (sites) {
+        const siteIds = [...sites];
+        const siteConnections = await prisma.contentBlockVariantOnSite.findMany({
+          where: {
+            variantId: contentBlockVariant.id
+          }
+        });
+        // Go through existing connections to either ensure they are excluded from creation
+        // or they are deleted if they are excluded in the request param.
+        await Promise.all(
+          siteConnections.map(async (variantOnSite) => {
+            if (siteIds.includes(variantOnSite.siteId)) {
+              siteIds.splice(siteIds.indexOf(variantOnSite.siteId), 1);
+            } else {
+              await prisma.contentBlockVariantOnSite.delete({
+                where: {
+                  id: variantOnSite.id
+                }
+              });
+            }
+          })
+        );
+        await Promise.all(
+          siteIds.map(async (siteId: string) => {
+            await prisma.contentBlockVariantOnSite.create({
+              data: {
+                variantId: contentBlockVariant.id,
+                siteId,
+                createdByUserId: user.id,
+                updatedByUserId: user.id
+              }
+            });
+          })
+        );
+      }
+
+      // Log content block variant update.
+      await prisma.activityLog.create({
+        data: {
+          action: 'update',
+          resourceType: 'contentBlockVariant',
+          resourceId: contentBlockVariant.id,
+          createdByUserId: user.id
+        }
+      });
+
+      return res.json({ data: { updated: true } });
+    }
+
+    res.json({ data: { updated: false } });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });

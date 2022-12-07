@@ -349,5 +349,6 @@ export async function completeComponentReferences(content: string, siteId: strin
 
     indexImpact += (replacement.length - stringMatch.length);
   }
+  copy = parseLocalizedInput(copy, localeCode);
   return copy;
 }
