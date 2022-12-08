@@ -81,9 +81,14 @@ router.get('/', async (req: Request, res: Response) => {
 
 router.post('/', validateRequest(createContentBlockSchema), async (req: Request, res: Response) => {
   try {
-    const { name, type, parentIds, childIds, user } = req.body;
+    const { name, type, parentIds, user } = req.body;
 
-    const parentType = type === 'question' ? 'question-category' : null;
+    let parentType: string | null = null;
+    if (type === 'question') {
+      parentType = 'question-category';
+    } else if (type === 'question-category') {
+      parentType = 'question-category';
+    }
     let parents: Array<ContentBlock> = [];
     if (parentIds && parentIds.length && parentType) {
       try {
@@ -107,31 +112,6 @@ router.post('/', validateRequest(createContentBlockSchema), async (req: Request,
       }
     }
 
-    const childType = type === 'question-category' ? 'question' : null;
-    let children: Array<ContentBlock> = [];
-    if (childIds && childIds.length && childType) {
-      try {
-        children = await Promise.all(
-          childIds.map(async (childId: string) => {
-            const child = await prisma.contentBlock.findFirst({
-              where: {
-                id: childId,
-                type: childType
-              }
-            });
-            if (!child) {
-              throw new Error(`Could not find ${childType} content block by ID ${childId}.`);
-            }
-            return child;
-          })
-        );
-      } catch (error) {
-        console.error(error);
-        return res.status(400).json({ error: error.message });
-      }
-    }
-
-
     const contentBlock = await prisma.contentBlock.create({
       data: {
         name,
@@ -147,19 +127,6 @@ router.post('/', validateRequest(createContentBlockSchema), async (req: Request,
           data: {
             parentId: parent.id,
             childId: contentBlock.id,
-            createdByUserId: user.id,
-            updatedByUserId: user.id
-          }
-        }))
-      );
-    }
-
-    if (children.length) {
-      await Promise.all(
-        children.map(child => prisma.childContentBlock.create({
-          data: {
-            parentId: contentBlock.id,
-            childId: child.id,
             createdByUserId: user.id,
             updatedByUserId: user.id
           }
@@ -222,7 +189,6 @@ router.get('/:blockId', (req: Request, res: Response) => {
 router.patch('/:blockId', validateRequest(patchContentBlockSchema), async (req: Request, res: Response) => {
   try {
     const { name, contentBlock, user } = req.body;
-    const childIds = req.body.childIds || [];
     const parentIds = req.body.parentIds || [];
 
     const existingParentRelations = await prisma.childContentBlock.findMany({
@@ -277,65 +243,6 @@ router.patch('/:blockId', validateRequest(patchContentBlockSchema), async (req: 
           data: {
             parentId: parent.id,
             childId: contentBlock.id,
-            createdByUserId: user.id,
-            updatedByUserId: user.id
-          }
-        }))
-      );
-    }
-
-    const existingChildRelations = await prisma.childContentBlock.findMany({
-      where: {
-        parentId: contentBlock.id
-      }
-    });
-    const existingChildIds = existingChildRelations.map(relationship => relationship.childId);
-    const newChildIds = childIds.filter((childId: string) => !existingChildIds.includes(childId));
-    const deleteExistinChildIds = existingChildIds.filter((childId: string) => !childIds.includes(childId));
-
-    // First, delete any old relationships that are not included in the request body.
-    await Promise.all(
-      deleteExistinChildIds.map(async (childId: string) => {
-        const item = existingChildRelations.find(item => item.childId === childId);
-        await prisma.childContentBlock.delete({
-          where: {
-            id: item.id
-          }
-        });
-      })
-    );
-
-    // Secondly, make sure to check that the new child IDs all exist.
-    let newChildren: Array<ContentBlock> = [];
-    if (newChildIds.length) {
-      const childType = contentBlock.type === 'question-category' ? 'question' : null;
-      if (childType) {
-        try {
-          newChildren = await Promise.all(
-            newChildIds.map(async (childId: string) => {
-              const parent = await prisma.contentBlock.findFirst({
-                where: {
-                  id: childId,
-                  type: childType
-                }
-              });
-              if (!parent) {
-                throw new Error(`Could not find ${childType} content block by ID ${childId}.`);
-              }
-              return parent;
-            })
-          );
-        } catch (error) {
-          return res.status(400).json({ error: error.message });
-        }
-      }
-
-      // Then finally create the new child relationships.
-      await Promise.all(
-        newChildren.map(child => prisma.childContentBlock.create({
-          data: {
-            parentId: contentBlock.id,
-            childId: child.id,
             createdByUserId: user.id,
             updatedByUserId: user.id
           }
