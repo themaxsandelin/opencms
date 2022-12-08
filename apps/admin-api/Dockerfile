@@ -7,7 +7,7 @@ FROM node:16.17.1-bullseye-slim
 RUN apt update && apt -y install openssl && corepack enable && corepack prepare pnpm@latest --activate && apt clean
 WORKDIR /app
 COPY . .
-RUN pnpm install --shamefully-hoist && pnpm build && npm pkg delete scripts.prepare
+RUN pnpm install --shamefully-hoist && pnpm build admin-api && npm pkg delete scripts.prepare
 
 FROM node:16.17.1-bullseye-slim
 RUN apt update && apt -y install openssl && corepack enable && corepack prepare pnpm@latest --activate && apt clean
