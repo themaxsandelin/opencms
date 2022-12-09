@@ -345,9 +345,11 @@ async function getContentBlockReference(contentBlockId: string, siteId: string, 
   if (!contentBlock) {
     return null;
   }
+
   const { version } = contentBlock;
   const content = JSON.parse(version.content);
   return {
+    id: contentBlockId,
     slug: version.slug,
     ...content
   };
@@ -388,6 +390,13 @@ export async function completeComponentReferences(content: string, siteId: strin
     );
     let replacement = '[]';
     if (items.length) {
+      items.sort((itemA, itemB) => {
+        const aIndex = idList.indexOf(itemA.id);
+        const bIndex = idList.indexOf(itemB.id);
+        if (aIndex > bIndex) return 1;
+        if (aIndex < bIndex) return -1;
+        return 0;
+      });
       replacement = JSON.stringify(items);
     }
 
