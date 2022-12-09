@@ -342,6 +342,9 @@ async function getContentBlockReference(contentBlockId: string, siteId: string, 
       version: true
     }
   });
+  if (!contentBlock) {
+    return null;
+  }
   const { version } = contentBlock;
   const content = JSON.parse(version.content);
   return {
