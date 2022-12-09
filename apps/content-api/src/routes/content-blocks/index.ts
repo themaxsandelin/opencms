@@ -55,7 +55,7 @@ router.get('/', validateRequest(queryContentBlockSchema), async (req: Request, r
               }
             },
             contentBlock: {
-              type: (type as string)
+              type: (type as string),
             }
           }
         }
@@ -118,6 +118,7 @@ router.get('/', validateRequest(queryContentBlockSchema), async (req: Request, r
               };
             })
           );
+          parentBlocks = parentBlocks.filter(Boolean);
         }
 
         const { version } = contentBlock;
@@ -134,7 +135,7 @@ router.get('/', validateRequest(queryContentBlockSchema), async (req: Request, r
       if (block1.name > block2.name) return 1;
       if (block1.name < block2.name) return -1;
       return 0;
-    }).filter(block => block.parents.length);
+    }).filter(block => block.parents.length > 0);
 
     res.json({ data: mappedBlocks });
   } catch (error) {
