@@ -170,23 +170,6 @@ export async function findPageInstanceListFromPath(path: string, siteId: string,
   return filteredPages;
 }
 
-async function getPageReference(pageId: string, siteId: string, environmentId: string, localeCode: string) {
-  return prisma.pageInstance.findFirst({
-    where: {
-      localeCode,
-      page: {
-        id: pageId,
-        siteId
-      }
-    },
-    select: {
-      title: true,
-      description: true,
-      path: true
-    }
-  });
-}
-
 function findObjectBoundaryByTag(matches: Array<RegExpMatchArray>, tag: '{' | '}'): number {
   // Store the number of counterparts (i.e. "{" is a counterpat to "}")
   // so to determine when the object is actually opened, or closed.
@@ -291,6 +274,23 @@ async function createFormVersionToken(versionId: string, siteId: string, environ
   });
 }
 
+async function getPageReference(pageId: string, siteId: string, environmentId: string, localeCode: string) {
+  return prisma.pageInstance.findFirst({
+    where: {
+      localeCode,
+      page: {
+        id: pageId,
+        siteId
+      }
+    },
+    select: {
+      title: true,
+      description: true,
+      path: true
+    }
+  });
+}
+
 async function getFormReference(formId: string, siteId: string, environmentId: string, localeCode: string) {
   const form = await prisma.formVersionPublication.findFirst({
     where: {
@@ -318,6 +318,38 @@ async function getFormReference(formId: string, siteId: string, environmentId: s
   };
 }
 
+async function getContentBlockReference(contentBlockId: string, siteId: string, environmentId: string, localeCode: string) {
+  const contentBlock = await prisma.contentBlockVariantVersionPublication.findFirst({
+    where: {
+      environment: {
+        id: environmentId
+      },
+      version: {
+        localeCode,
+        variant: {
+          sites: {
+            some: {
+              siteId: siteId
+            }
+          },
+          contentBlock: {
+            id: contentBlockId
+          }
+        }
+      }
+    },
+    include: {
+      version: true
+    }
+  });
+  const { version } = contentBlock;
+  const content = JSON.parse(version.content);
+  return {
+    slug: version.slug,
+    ...content
+  };
+}
+
 export async function completeComponentReferences(content: string, siteId: string, environmentId: string, localeCode: string) {
   let copy = `${content}`;
   const regex = /(?:"reference:(?:\S[^"]+)"{1})/gm;
@@ -328,18 +360,32 @@ export async function completeComponentReferences(content: string, siteId: strin
     const [stringMatch] = match;
     const [referenceString] = stringMatch.split('"').filter(Boolean);
 
-    const [ , type, id ] = referenceString.split(':');
-    let replacement = '{}';
-    if (type === 'page') {
-      const page = await getPageReference(id, siteId, environmentId, localeCode);
-      if (page) {
-        replacement = `${JSON.stringify(page)}`;
-      }
-    } else if (type === 'form') {
-      const form = await getFormReference(id, siteId, environmentId, localeCode);
-      if (form) {
-        replacement = `${JSON.stringify(form)}`;
-      }
+    const [ , type, ids ] = referenceString.split(':');
+    const idList = ids.split(',');
+    const items = [];
+    await Promise.all(
+      idList.map(async (id) => {
+        if (type === 'page') {
+          const page = await getPageReference(id, siteId, environmentId, localeCode);
+          if (page) {
+            items.push(page);
+          }
+        } else if (type === 'form') {
+          const form = await getFormReference(id, siteId, environmentId, localeCode);
+          if (form) {
+            items.push(form);
+          }
+        } else if (type === 'content-block') {
+          const contentBlock = await getContentBlockReference(id, siteId, environmentId, localeCode);
+          if (contentBlock) {
+            items.push(contentBlock);
+          }
+        }
+      })
+    );
+    let replacement = '[]';
+    if (items.length) {
+      replacement = JSON.stringify(items);
     }
 
     const cutStart = match.index + indexImpact;
