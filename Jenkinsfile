@@ -308,7 +308,7 @@ pipeline {
         stage('Publish deploy') {
             when {
                 expression {
-                    return ENVIRONMENT == 'Prod' && DEPLOY == 'true'
+                    return ENVIRONMENT == 'Production-02' && DEPLOY == 'true'
                 }
             }
             steps {
