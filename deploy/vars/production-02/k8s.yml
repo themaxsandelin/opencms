@@ -2,7 +2,7 @@
 namespace: prod-web
 
 ingress_host: service-k8s-p02.int.ellosgroup.com
-version: v0.6.0
+version: v0.7.0
 exclude_list:
 -
 
@@ -23,7 +23,7 @@ admin_api:
       memory: "1Gi"
 
 nfs_share:
-  path: "/srv/nfs/k8s/prod-02/opencms"
+  path: "/srv/nfs/k8s/prod02/opencms"
   server: "nfscl-01.rcndmz.ad"
   storage_size: "10Gi"
   name: "pvc-opencms"
