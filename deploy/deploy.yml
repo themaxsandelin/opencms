@@ -20,3 +20,8 @@
       with_items:
       - "{{ lookup('fileglob', 'templates/*.yml').split(',') | difference(exclude_list) | sort }}"
     tags: admin-cms
+  - block:
+      - include_tasks: "{{ item }}"
+        with_items:
+        - "{{ lookup('fileglob', 'volumes/*.yml').split(',') | difference(exclude_list) | sort }}"
+    tags: admin-volumes

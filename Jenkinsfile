@@ -87,7 +87,7 @@ pipeline {
                                     ),
                                     choice(
                                             name: "ENVIRONMENT",
-                                            choices: "Development\nTest\nProd",
+                                            choices: "Development\nTest\nProduction-02",
                                             description: "Which environment to deploy to?"
                                     )
                             ]
@@ -308,7 +308,7 @@ pipeline {
         stage('Publish deploy') {
             when {
                 expression {
-                    return ENVIRONMENT == 'Prod' && DEPLOY == 'true'
+                    return ENVIRONMENT == 'Production-02' && DEPLOY == 'true'
                 }
             }
             steps {
@@ -382,7 +382,7 @@ def getK8sContext(targetEnv) {
         return "dev-web";
     } else if (targetEnv.equalsIgnoreCase("test")) {
         return "cluster.local";
-    } else if (targetEnv.equalsIgnoreCase("prod")) {
+    } else if (targetEnv.equalsIgnoreCase("production-02")) {
         return "PRODUCTION-02";
     }
 }
@@ -391,7 +391,7 @@ def getK8sConfig(targetEnv) {
         return "config-dev";
     } else if (targetEnv.equalsIgnoreCase("test")) {
         return "config-test";
-    } else if (targetEnv.equalsIgnoreCase("prod")) {
+    } else if (targetEnv.equalsIgnoreCase("production-02")) {
         return "config-prod-02";
     }
 }
@@ -400,7 +400,7 @@ def getShorthandNamespace(targetEnv) {
         return "dev";
     } else if (targetEnv.equalsIgnoreCase("test")) {
         return "test";
-    } else if (targetEnv.equalsIgnoreCase("prod")) {
+    } else if (targetEnv.equalsIgnoreCase("production-02")) {
         return "prod";
     }
 }
