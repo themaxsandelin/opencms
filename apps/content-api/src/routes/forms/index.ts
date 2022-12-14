@@ -10,7 +10,7 @@ import { validateRequest } from '@open-cms/shared/utils';
 import { formSubmissionSchema } from './schema';
 
 // Controller
-import { getPublishedFormVersion, validateFormData, validateSubmissionFiles, handleSubmissionFiles, deleteRequestFiles, validateFormToken, deleteFormToken } from './controller';
+import { getPublishedFormVersion, getFormOnPagesByPath, validateFormData, validateSubmissionFiles, handleSubmissionFiles, deleteRequestFiles, validateFormToken, deleteFormToken } from './controller';
 
 // Workaround NX overwriting env variables at build time.
 const env = {...process}.env;
@@ -38,6 +38,7 @@ const upload = multer({
 
 router.post('/:id', [upload.array('files[]'), validateRequest(formSubmissionSchema)], async (req: Request, res: Response) => {
   try {
+    const { pagePath } = req.query;
     const { selectedLocale, publishingEnvironment, site } = req.body;
     const { id } = req.params;
     const files = req.files as Express.Multer.File[];
@@ -55,6 +56,12 @@ router.post('/:id', [upload.array('files[]'), validateRequest(formSubmissionSche
       return res.status(400).json({ error: 'Invalid token.' });
     }
 
+    const pages = await getFormOnPagesByPath((pagePath as string), publishedFormVersion.version.formId, site.id, publishingEnvironment.id, selectedLocale.code);
+    if (!pages) {
+      await deleteRequestFiles(files);
+      return res.status(400).json({ error: 'Invalid form submission', details: { cause: 'Form not found on page.' } });
+    }
+
     const { valid, cause, fieldKey, data: formData } = await validateFormData(req.body, publishedFormVersion.version);
     if (!valid) {
       await deleteRequestFiles(files);
@@ -66,6 +73,11 @@ router.post('/:id', [upload.array('files[]'), validateRequest(formSubmissionSche
       await deleteRequestFiles(files);
       return res.status(400).json({ error: 'Invalid form submission', details: { cause: validFilesCause, fieldKey: validFilesKey } });
     }
+
+    formData.dynamic = {};
+    pages.forEach((page, i) => {
+      formData.dynamic[`page-${i}`] = page.title;
+    });
 
     const submission = await prisma.formVersionSubmission.create({
       data: {

@@ -3,6 +3,9 @@ import { rename, mkdir, rm } from 'fs/promises';
 import { PrismaClient, FormVersionSubmission, FormVersion } from '@prisma/client';
 import { escape } from 'validator';
 
+// Controllers
+import { findPageInstanceListFromPath } from '../content/controller';
+
 // Types
 import { ValidationResponse } from '../../types/forms';
 
@@ -180,4 +183,58 @@ export async function deleteFormToken(tokenId: string) {
       id: tokenId
     }
   });
+}
+
+export async function getFormOnPagesByPath(path: string, formId: string, siteId: string, environmentId: string, localeCode: string) {
+  try {
+    const instances = await findPageInstanceListFromPath(path, siteId, environmentId, localeCode);
+    if (!instances.length) {
+      return null;
+    }
+
+    const pageInstance = instances.find(instance => instance.path === path);
+    const pageLayoutVersionPublication = await prisma.pageLayoutVersionPublication.findFirst({
+      where: {
+        environmentId,
+        version: {
+          layout: {
+            page: {
+              id: pageInstance.pageId
+            }
+          }
+        }
+      },
+      include: {
+        version: true
+      }
+    });
+
+    // Check that the form is actually present on the page.
+    if (!pageLayoutVersionPublication) {
+      return null;
+    }
+    if (!pageLayoutVersionPublication.version) {
+      return null;
+    }
+
+    const { version } = pageLayoutVersionPublication;
+    if (!version.content) {
+      return null;
+    }
+
+    const content = JSON.parse(version.content);
+    if (!content.components) {
+      return null;
+    }
+
+    const formReference = content.components.find(component => component.key === 'form' && component.fieldData.form && component.fieldData.form === `reference:form:${formId}`);
+    if (!formReference) {
+      return null;
+    }
+
+    return instances;
+  } catch (error) {
+    console.error(`Failed to fetch form reference from page by path ${path}`, error);
+    return null;
+  }
 }

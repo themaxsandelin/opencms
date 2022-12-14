@@ -14,6 +14,10 @@ export const formSubmissionSchema = z.object({
     site: z.string({
       required_error: 'You have to provide the site key using the site query parameter.',
       invalid_type_error: 'The site query parameter has to be a string.'
-    })
+    }),
+    pagePath: z.string({
+      required_error: 'You have to provide the page path using the pagePath query parameter.',
+      invalid_type_error: 'The pagePath query parameter has to be a string.'
+    }),
   })
 });
