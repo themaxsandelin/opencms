@@ -319,6 +319,7 @@ model FormVersionSubmission {
   version FormVersion @relation(fields: [versionId], references: [id])
   versionId String
   files FormVersionSubmissionFile[]
+  sentByEmail Boolean @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt @default(now())
 }
