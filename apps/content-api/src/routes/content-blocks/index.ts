@@ -17,7 +17,25 @@ const router = Router();
 router.get('/', validateRequest(queryContentBlockSchema), async (req: Request, res: Response) => {
   try {
     const { selectedLocale, publishingEnvironment, site } = req.body;
-    const { type, parentSlug, siblingSlug } = req.query;
+    const { type, parentSlug, siblingSlug, limit, page } = req.query;
+
+    let countLimit = 10;
+    const providedLimit = limit as string;
+    if (providedLimit) {
+      const parsedProvidedLimit = parseInt(providedLimit);
+      if (!isNaN(parsedProvidedLimit)) {
+        countLimit = parsedProvidedLimit;
+      }
+    }
+
+    let paginationPage = 1;
+    const providedPage = page as string;
+    if (providedPage) {
+      const parsedProvidedPage = parseInt(providedPage);
+      if (!isNaN(parsedProvidedPage)) {
+        paginationPage = parsedProvidedPage;
+      }
+    }
 
     if (parentSlug && siblingSlug) {
       return res.status(400).json({ error: 'Parameters parentSlug and siblingSlug cannot both be provided. Choose either or.' });
@@ -43,23 +61,27 @@ router.get('/', validateRequest(queryContentBlockSchema), async (req: Request, r
       }
     }
 
-    const blocksQuery: Prisma.ContentBlockVariantVersionPublicationFindManyArgs = {
-      where: {
-        environmentId: publishingEnvironment.id,
-        version: {
-          localeCode: selectedLocale.code,
-          variant: {
-            sites: {
-              some: {
-                siteId: site.id
-              }
-            },
-            contentBlock: {
-              type: (type as string),
+    const where = {
+      environmentId: publishingEnvironment.id,
+      version: {
+        localeCode: selectedLocale.code,
+        variant: {
+          sites: {
+            some: {
+              siteId: site.id
             }
+          },
+          contentBlock: {
+            type: (type as string),
           }
         }
       }
+    }
+    const blocksQuery: Prisma.ContentBlockVariantVersionPublicationFindManyArgs = {
+      where: {...where}
+    };
+    const countQuery: Prisma.ContentBlockVariantVersionPublicationCountArgs = {
+      where: {...where}
     };
     if (parentBlock) {
       blocksQuery.where.version.variant.contentBlock.parents = {
@@ -67,9 +89,17 @@ router.get('/', validateRequest(queryContentBlockSchema), async (req: Request, r
           parentId: parentBlock.id
         }
       };
+      countQuery.where.version.variant.contentBlock.parents = {
+        some: {
+          parentId: parentBlock.id
+        }
+      };
     } else if (siblingBlock) {
       // Exclude sibling from results.
       blocksQuery.where.version.variant.contentBlock.NOT = {
+        id: siblingBlock.id
+      };
+      countQuery.where.version.variant.contentBlock.NOT = {
         id: siblingBlock.id
       };
       const { parents } = siblingBlock;
@@ -80,8 +110,20 @@ router.get('/', validateRequest(queryContentBlockSchema), async (req: Request, r
           }))
         }
       };
+      countQuery.where.version.variant.contentBlock.parents = {
+        some: {
+          OR: parents.map(({ parentId }) => ({
+            parentId
+          }))
+        }
+      };
     }
+
+    const take = countLimit;
+    const skip = countLimit * (paginationPage - 1);
     const contentBlocks = await prisma.contentBlockVariantVersionPublication.findMany({
+      take,
+      skip,
       ...blocksQuery,
       include: {
         version: {
@@ -99,6 +141,16 @@ router.get('/', validateRequest(queryContentBlockSchema), async (req: Request, r
         }
       }
     });
+
+    const total = await prisma.contentBlockVariantVersionPublication.count(countQuery);
+    const last = Math.ceil(total / take);
+    const pagination: { current: number; next?: number; last: number; } = {
+      current: paginationPage,
+      last
+    };
+    if (paginationPage === last) {
+      pagination.next = paginationPage + 1;
+    }
 
     const mappedBlocks = await Promise.all(
       contentBlocks.map(async (contentBlock) => {
@@ -137,7 +189,7 @@ router.get('/', validateRequest(queryContentBlockSchema), async (req: Request, r
       return 0;
     }).filter(block => block.parents.length > 0);
 
-    res.json({ data: mappedBlocks });
+    res.json({ data: mappedBlocks, pagination });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });

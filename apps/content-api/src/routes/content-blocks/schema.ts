@@ -25,5 +25,11 @@ export const queryContentBlockSchema = z.object({
     siblingSlug: z.string({
       invalid_type_error: 'The siblingSlug parameter has to be a string.'
     }).regex(/^\/((\*?)|([a-z0-9]*)|(([a-z0-9]?)+(?:-[a-z0-9]+))*){1}$/gm, 'The parentSlug must be in the format /like-a-slug.').optional(),
-  })
+    limit: z.string({
+      invalid_type_error: 'The limit parameter has to be a string.'
+    }).optional(),
+    page: z.string({
+      invalid_type_error: 'The page parameter has to be a string.'
+    }).optional(),
+  }),
 });
