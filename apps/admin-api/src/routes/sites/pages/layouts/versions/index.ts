@@ -149,7 +149,7 @@ router.post('/:versionId/publish', validateRequest(publishVersionSchema), async 
       return res.status(404).json({ error: `Could not find a publishing environment with the ID ${environmentId}.` });
     }
 
-    const existingPublication = await prisma.pageLayoutVersionPublication.findFirst({
+    const existingPublications = await prisma.pageLayoutVersionPublication.findMany({
       where: {
         environmentId: publishingEnvironment.id,
         version: {
@@ -161,32 +161,32 @@ router.post('/:versionId/publish', validateRequest(publishVersionSchema), async 
         }
       }
     });
-    if (existingPublication) {
-      // If the current publication exists and is the same version that is targeted, do not publish again.
-      if (existingPublication.versionId === pageLayoutVersion.id) {
+    if (existingPublications.length) {
+      const versionIsPublished = existingPublications.find(publication => publication.versionId === pageLayoutVersion.id);
+      if (versionIsPublished) {
         return res.status(400).json({ error: 'This page layout version is already published to the provided environment.' });
       }
-      // Otherwise, update the current publication to the new version.
-      await prisma.pageLayoutVersionPublication.update({
-        data: {
-          versionId: pageLayoutVersion.id,
-          createdByUserId: user.id,
-          updatedByUserId: user.id,
-        },
-        where: {
-          id: existingPublication.id
-        }
-      });
-    } else {
-      await prisma.pageLayoutVersionPublication.create({
-        data: {
-          versionId: pageLayoutVersion.id,
-          environmentId: publishingEnvironment.id,
-          createdByUserId: user.id,
-          updatedByUserId: user.id,
-        }
-      });
+
+      // Delete old publications from other versions.
+      await Promise.all(
+        existingPublications.map(async (publication) => {
+          await prisma.pageLayoutVersionPublication.delete({
+            where: {
+              id: publication.id
+            }
+          });
+        })
+      );
     }
+
+    await prisma.pageLayoutVersionPublication.create({
+      data: {
+        versionId: pageLayoutVersion.id,
+        environmentId: publishingEnvironment.id,
+        createdByUserId: user.id,
+        updatedByUserId: user.id,
+      }
+    });
 
     if (!pageLayoutVersion.wasPublished) {
       await prisma.pageLayoutVersion.update({

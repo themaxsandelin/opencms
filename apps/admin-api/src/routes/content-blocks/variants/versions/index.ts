@@ -165,7 +165,7 @@ router.post('/:versionId/publish', validateVersionPublicationRequest(), async (r
       return res.status(404).json({ error: `Could not find a publishing environment with the ID ${environmentId}.` });
     }
 
-    const existingPublication = await prisma.contentBlockVariantVersionPublication.findFirst({
+    const existingPublications = await prisma.contentBlockVariantVersionPublication.findMany({
       where: {
         environmentId: publishingEnvironment.id,
         version: {
@@ -178,34 +178,32 @@ router.post('/:versionId/publish', validateVersionPublicationRequest(), async (r
         }
       }
     });
-    if (existingPublication) {
-      // If the current publication exists and is the same version that is targeted, do not publish again.
-      if (existingPublication.versionId === contentBlockVariantVersion.id) {
+    if (existingPublications.length) {
+      const versionIsPublished = existingPublications.find(publication => publication.versionId === contentBlockVariantVersion.id);
+      if (versionIsPublished) {
         return res.status(400).json({ error: 'This content block variant version is already published to the provided environment.' });
       }
-      // Otherwise, update the current publication to the new version.
-      await prisma.contentBlockVariantVersionPublication.update({
-        data: {
-          versionId: contentBlockVariantVersion.id,
-          createdByUserId: user.id,
-          updatedByUserId: user.id,
-        },
-        where: {
-          id: existingPublication.id
-        }
-      });
-    } else {
-      // If no publication on the given environment has been made for this content block,
-      // publish the provided version as expected.
-      await prisma.contentBlockVariantVersionPublication.create({
-        data: {
-          versionId: contentBlockVariantVersion.id,
-          environmentId: publishingEnvironment.id,
-          createdByUserId: user.id,
-          updatedByUserId: user.id,
-        }
-      });
+
+      // Delete old publications from other versions.
+      await Promise.all(
+        existingPublications.map(async (publication) => {
+          await prisma.contentBlockVariantVersionPublication.delete({
+            where: {
+              id: publication.id
+            }
+          });
+        })
+      );
     }
+
+    await prisma.contentBlockVariantVersionPublication.create({
+      data: {
+        versionId: contentBlockVariantVersion.id,
+        environmentId: publishingEnvironment.id,
+        createdByUserId: user.id,
+        updatedByUserId: user.id,
+      }
+    });
 
     // Ensure that the content block variant version has the prop wasPublished set to true whenever it's published.
     if (!contentBlockVariantVersion.wasPublished) {
