@@ -91,11 +91,15 @@ export async function validateSubmissionFiles(files: Array<Express.Multer.File>,
   const { fields } = JSON.parse(formVersion.config);
   const fileField = fields.find(field => field.type === 'file');
   if (!fileField) {
-    return {
-      valid: false,
-      cause: 'files-not-accepted',
-      fieldKey: null
-    };
+    if (files && files.length) {
+      return {
+        valid: false,
+        cause: 'files-not-accepted',
+        fieldKey: null
+      };
+    } else {
+      return response;
+    }
   }
 
   const { mimeTypes, limit } = fileField.config;
