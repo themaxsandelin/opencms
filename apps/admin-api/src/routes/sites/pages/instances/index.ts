@@ -61,11 +61,6 @@ router.post('/', validateRequest(createInstanceSchema), async (req: Request, res
       return res.status(400).json({ error: `There already exists a page instance with the locale code ${localeCode}.` });
     }
 
-    const slugTaken = await siblingPageInstanceExistsWithSlug(page.id, localeCode, slug);
-    if (slugTaken) {
-      return res.status(400).json({ error: 'The slug you chose is already being used by a sibling page with the same locale.' });
-    }
-
     const givenSlug = page.isFrontPage ? '/' : slug;
     let givenPath = givenSlug;
     if (!page.isFrontPage && page.parentId) {
@@ -86,7 +81,7 @@ router.post('/', validateRequest(createInstanceSchema), async (req: Request, res
     }
 
     if (givenPath) {
-      await updateAllChildPagesInstancePaths(page.id, localeCode, givenPath, user.id);
+      await updateAllChildPagesInstancePaths(page.parentId, localeCode, givenPath, user.id);
     }
 
     const instance = await prisma.pageInstance.create({
@@ -180,11 +175,6 @@ router.patch('/:instanceId', validateRequest(updateInstanceSchema), async (req: 
     }
 
     if (!page.isFrontPage && slug) {
-      const slugTaken = await siblingPageInstanceExistsWithSlug(page.parentId, pageInstance.localeCode, slug);
-      if (slugTaken) {
-        return res.status(400).json({ error: 'The slug you chose is already being used by a sibling page with the same locale.' });
-      }
-
       let givenPath = slug;
       if (page.parentId) {
         const parent = await prisma.pageInstance.findFirst({
