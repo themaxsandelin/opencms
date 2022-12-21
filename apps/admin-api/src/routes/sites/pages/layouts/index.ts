@@ -7,6 +7,7 @@ import VersionsRouter from './versions';
 
 // Utils
 import { validateRequest } from '@open-cms/shared/utils';
+import { deletePageInstanceLayoutByPageLayoutId } from '../instances/layouts/controller';
 
 // Validation schema
 import { createLayoutSchema, updateLayoutSchema } from './schema';
@@ -19,7 +20,8 @@ router.get('/', async (req: Request, res: Response) => {
     const { page } = req.body;
     const layouts = await prisma.pageLayout.findMany({
       where: {
-        pageId: page.id
+        pageId: page.id,
+        deleted: false,
       }
     });
 
@@ -65,7 +67,8 @@ router.use('/:layoutId', async (req: Request, res: Response, next: NextFunction)
     const { layoutId } = req.params;
     const pageLayout = await prisma.pageLayout.findFirst({
       where: {
-        id: layoutId
+        id: layoutId,
+        deleted: false
       }
     });
     if (!pageLayout) {
@@ -117,6 +120,38 @@ router.patch('/:layoutId', validateRequest(updateLayoutSchema), async (req: Requ
     });
 
     res.json({ data: { updated: true } });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.delete('/:layoutId', async (req: Request, res: Response) => {
+  try {
+    const { pageLayout, user } = req.body;
+
+    await prisma.pageLayout.update({
+      data: {
+        deleted: true
+      },
+      where: {
+        id: pageLayout.id
+      }
+    });
+
+    await deletePageInstanceLayoutByPageLayoutId(pageLayout.id, user.id);
+
+    // Log page layout deletion.
+    await prisma.activityLog.create({
+      data: {
+        action: 'delete',
+        resourceType: 'pageLayout',
+        resourceId: pageLayout.id,
+        createdByUserId: user.id
+      }
+    });
+
+    res.json({ data: { deleted: true } });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });
