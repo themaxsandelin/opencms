@@ -402,9 +402,6 @@ export async function completeComponentReferences(content: string, siteId: strin
         if (aIndex > bIndex) return 1;
         if (aIndex < bIndex) return -1;
         return 0;
-      }).map(item => {
-        delete item.id;
-        return item;
       });
       replacement = JSON.stringify(items);
     }
