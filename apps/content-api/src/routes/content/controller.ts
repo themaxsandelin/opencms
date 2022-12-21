@@ -193,7 +193,7 @@ function findObjectBoundaryByTag(matches: Array<RegExpMatchArray>, tag: '{' | '}
 }
 
 function findObjectBounderies(searchString: string, refIndex: number) {
-  const tagRegex = /[{}]{1}/gm;
+  const tagRegex = /(?<!\\")[{}]{1}(?!\\")/gm;
 
   // First, sort to find the closest tag on the left side of the reference index.
   const tagMatches = [...searchString.matchAll(tagRegex)].sort((matchA, matchB) => {
@@ -251,7 +251,7 @@ function parseLocalizedInput(content: string, localeCode: string) {
     const localizedStringObject = searchString.substring(left, right + 1);
     const localizedObject: { type: string, values: { [index: string] : string } } = JSON.parse(localizedStringObject);
     if (Object.prototype.hasOwnProperty.call(localizedObject.values, localeCode)) {
-      replaceString = `"${localizedObject.values[localeCode]}"`;
+      replaceString = JSON.stringify(localizedObject.values[localeCode]);
     }
     searchString = `${searchString.substring(0, left)}${replaceString}${searchString.substring(right + 1, searchString.length)}`;
     indexOffset += localizedStringObject.length - replaceString.length;
