@@ -138,7 +138,7 @@ router.patch('/:versionId', async (req: Request, res: Response) => {
 
 router.post('/:versionId/publish', validateRequest(publishVersionSchema), async (req: Request, res: Response) => {
   try {
-    const { environment: environmentId, pageLayoutVersion, page, user } = req.body;
+    const { environment: environmentId, pageLayoutVersion, pageLayout, user } = req.body;
 
     const publishingEnvironment = await prisma.publishingEnvironment.findFirst({
       where: {
@@ -154,9 +154,7 @@ router.post('/:versionId/publish', validateRequest(publishVersionSchema), async 
         environmentId: publishingEnvironment.id,
         version: {
           layout: {
-            page: {
-              id: page.id
-            }
+            id: pageLayout.id
           }
         }
       }
