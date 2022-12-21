@@ -50,16 +50,20 @@ router.post('/', validateRequest(createInstanceLayoutSchema), async (req: Reques
       return res.status(400).json({ error: `Could not find a page layout by the ID ${layoutId} on this page.` });
     }
 
-    const existingPageInstanceLayout = await prisma.pageInstanceLayout.findFirst({
+    // Delete existing page instance layout connections.
+    const existingPageInstanceLayouts = await prisma.pageInstanceLayout.findMany({
       where: {
         pageInstanceId: pageInstance.id,
-        pageLayoutId: layout.id,
         publishingEnvironmentId: environment.id
       }
     });
-    if (existingPageInstanceLayout) {
-      return res.status(400).json({ error: 'This layout has already been published on this environment, for this page instance.' });
-    }
+    await Promise.all(
+      existingPageInstanceLayouts.map(async (pageInstanceLayout) => prisma.pageInstanceLayout.delete({
+        where: {
+          id: pageInstanceLayout.id
+        }
+      }))
+    );
 
     const pageInstanceLayout = await prisma.pageInstanceLayout.create({
       data: {
