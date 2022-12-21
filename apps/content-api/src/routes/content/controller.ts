@@ -276,7 +276,7 @@ async function createFormVersionToken(versionId: string, siteId: string, environ
 }
 
 async function getPageReference(pageId: string, siteId: string, environmentId: string, localeCode: string) {
-  return prisma.pageInstance.findFirst({
+  const page = await prisma.pageInstance.findFirst({
     where: {
       localeCode,
       page: {
@@ -291,6 +291,10 @@ async function getPageReference(pageId: string, siteId: string, environmentId: s
       path: true
     }
   });
+  return {
+    id: pageId,
+    ...page,
+  };
 }
 
 async function getFormReference(formId: string, siteId: string, environmentId: string, localeCode: string) {
@@ -398,6 +402,9 @@ export async function completeComponentReferences(content: string, siteId: strin
         if (aIndex > bIndex) return 1;
         if (aIndex < bIndex) return -1;
         return 0;
+      }).map(item => {
+        delete item.id;
+        return item;
       });
       replacement = JSON.stringify(items);
     }
