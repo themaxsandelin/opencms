@@ -9,7 +9,7 @@ import VersionsRouter from './versions';
 import { validateRequest } from '@open-cms/shared/utils';
 
 // Validation schema
-import { createLayoutSchema } from './schema';
+import { createLayoutSchema, updateLayoutSchema } from './schema';
 
 const prisma = new PrismaClient();
 const router = Router({ mergeParams: true });
@@ -84,6 +84,39 @@ router.get('/:layoutId', async (req: Request, res: Response) => {
   try {
     const { pageLayout } = req.body;
     res.json({ data: pageLayout });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.patch('/:layoutId', validateRequest(updateLayoutSchema), async (req: Request, res: Response) => {
+  try {
+    const { name, pageLayout, user } = req.body;
+    if (!name) {
+      return res.json({ data: { updated: false } });
+    }
+
+    await prisma.pageLayout.update({
+      data: {
+        name
+      },
+      where: {
+        id: pageLayout.id
+      }
+    });
+
+    // Log page layout update.
+    await prisma.activityLog.create({
+      data: {
+        action: 'update',
+        resourceType: 'pageLayout',
+        resourceId: pageLayout.id,
+        createdByUserId: user.id
+      }
+    });
+
+    res.json({ data: { updated: true } });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });

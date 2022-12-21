@@ -9,3 +9,11 @@ export const createLayoutSchema = z.object({
     })
   })
 });
+
+export const updateLayoutSchema = z.object({
+  body: z.object({
+    name: z.string({
+      invalid_type_error: 'The layout name has to be a string.'
+    }).optional()
+  })
+});
