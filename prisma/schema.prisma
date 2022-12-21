@@ -91,6 +91,7 @@ model PageInstance {
   path String
   localeCode String
   config String @default("") @db.NVarChar(MAX)
+  deleted Boolean @default(false)
   pageId String
   page Page @relation(fields: [pageId], references: [id])
   layouts PageInstanceLayout[]

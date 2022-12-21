@@ -63,6 +63,11 @@ router.get('/', validateRequest(queryContentSchema), async (req: Request, res: R
             instances: {
               some: {
                 pageInstanceId: pageInstance.id
+              },
+              none: {
+                pageInstance: {
+                  deleted: true
+                }
               }
             }
           }

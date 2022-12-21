@@ -16,7 +16,7 @@ router.get('/', async (req: Request, res: Response) => {
     const { instanceId } = req.params;
     const pageInstanceLayouts = await prisma.pageInstanceLayout.findMany({
       where: {
-        pageInstanceId: instanceId
+        pageInstanceId: instanceId,
       }
     });
 
@@ -43,7 +43,8 @@ router.post('/', validateRequest(createInstanceLayoutSchema), async (req: Reques
     const layout = await prisma.pageLayout.findFirst({
       where: {
         id: layoutId,
-        pageId: pageInstance.pageId
+        pageId: pageInstance.pageId,
+        deleted: false
       }
     });
     if (!layout) {

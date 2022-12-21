@@ -20,7 +20,8 @@ router.get('/', validateRequest(queryPagesSchema), async (req: Request, res: Res
       where: {
         page: {
           siteId: site.id
-        }
+        },
+        deleted: false
       },
       select: {
         title: true,

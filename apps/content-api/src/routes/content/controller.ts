@@ -121,6 +121,7 @@ async function findPageInstanceFromPathPieces(pieces: Array<string>, siteId: str
   const pageInstance: PageInstanceExtended = await prisma.pageInstance.findFirst({
     where: {
       localeCode,
+      deleted: false,
       OR: [
         {
           path: paths[0]
@@ -281,7 +282,8 @@ async function getPageReference(pageId: string, siteId: string, environmentId: s
       page: {
         id: pageId,
         siteId
-      }
+      },
+      deleted: false
     },
     select: {
       title: true,
