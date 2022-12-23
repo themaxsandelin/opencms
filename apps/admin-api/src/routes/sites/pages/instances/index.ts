@@ -84,10 +84,6 @@ router.post('/', validateRequest(createInstanceSchema), async (req: Request, res
       }
     }
 
-    if (givenPath) {
-      await updateAllChildPagesInstancePaths(page.parentId, localeCode, givenPath, user.id);
-    }
-
     const instance = await prisma.pageInstance.create({
       data: {
         title,
