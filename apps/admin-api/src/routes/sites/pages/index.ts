@@ -155,23 +155,25 @@ router.patch('/:pageId', validateRequest(patchPageSchema), async (req: Request, 
     if (name) {
       query.data.name = name;
     }
-    if (parentId && page.parentId !== parentId) {
-      const parent = await prisma.page.findFirst({
-        where: {
-          id: parentId
+    if (page.parentId !== parentId) {
+      if (parentId) {
+        const parent = await prisma.page.findFirst({
+          where: {
+            id: parentId
+          }
+        });
+        if (!parent) {
+          return res.status(400).json({ error: 'There is no page with an id matching the provided parentId.' });
         }
-      });
-      if (!parent) {
-        return res.status(400).json({ error: 'There is no page with an id matching the provided parentId.' });
-      }
 
-      const instancePathsUnique = await pageInstanceSlugsAreUniqueOnParentPage(page.id, parent.id);
-      if (!instancePathsUnique) {
-        return res.status(400).json({ error: 'One of the page instances has the same slug as one of the new parent\'s instances.' });
+        const instancePathsUnique = await pageInstanceSlugsAreUniqueOnParentPage(page.id, parent.id);
+        if (!instancePathsUnique) {
+          return res.status(400).json({ error: 'One of the page instances has the same slug as one of the new parent\'s instances.' });
+        }
       }
 
       changeOfParentPage = true;
-      query.data.parentId = parentId;
+      query.data.parentId = parentId || null;
     }
 
     /**
