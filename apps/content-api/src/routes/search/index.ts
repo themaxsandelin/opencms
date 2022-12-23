@@ -15,34 +15,69 @@ router.get('/', validateRequest(searchQuerySchema), async (req: Request, res: Re
   try {
     const { selectedLocale, publishingEnvironment, site } = req.body;
 
-    const { term } = req.query;
+    const { term, limit, page } = req.query;
 
-    const questions = await prisma.contentBlockVariantVersionPublication.findMany({
-      where: {
-        environmentId: publishingEnvironment.id,
-        version: {
-          content: {
-            contains: term as string
-          },
-          localeCode: selectedLocale.code,
-          variant: {
-            sites: {
-              some: {
-                siteId: site.id
-              }
-            },
-            contentBlock: {
-              type: 'question'
+    let countLimit = 10;
+    const providedLimit = limit as string;
+    if (providedLimit) {
+      const parsedProvidedLimit = parseInt(providedLimit);
+      if (!isNaN(parsedProvidedLimit)) {
+        countLimit = parsedProvidedLimit;
+      }
+    }
+
+    let paginationPage = 1;
+    const providedPage = page as string;
+    if (providedPage) {
+      const parsedProvidedPage = parseInt(providedPage);
+      if (!isNaN(parsedProvidedPage)) {
+        paginationPage = parsedProvidedPage;
+      }
+    }
+
+    const take = countLimit;
+    const skip = countLimit * (paginationPage - 1);
+    const where = {
+      environmentId: publishingEnvironment.id,
+      version: {
+        content: {
+          contains: term as string
+        },
+        localeCode: selectedLocale.code,
+        variant: {
+          sites: {
+            some: {
+              siteId: site.id
             }
+          },
+          contentBlock: {
+            type: 'question'
           }
         }
-      },
+      }
+    };
+
+    const questions = await prisma.contentBlockVariantVersionPublication.findMany({
+      take,
+      skip,
+      where,
       include: {
         version: true
       }
     });
 
+    const total = await prisma.contentBlockVariantVersionPublication.count({ where });
+    const last = Math.ceil(total / take);
+    const pagination: { current: number; next?: number; last: number; } = {
+      current: paginationPage,
+      last
+    };
+    if (paginationPage !== last) {
+      pagination.next = paginationPage + 1;
+    }
+
     res.json({
+      pagination,
       data: questions.map(question => {
         const { version } = question;
         const content = JSON.parse(version.content);

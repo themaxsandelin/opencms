@@ -148,7 +148,7 @@ router.get('/', validateRequest(queryContentBlockSchema), async (req: Request, r
       current: paginationPage,
       last
     };
-    if (paginationPage === last) {
+    if (paginationPage !== last) {
       pagination.next = paginationPage + 1;
     }
 
