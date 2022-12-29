@@ -5,7 +5,7 @@ import { Prisma, PrismaClient } from '@prisma/client';
 // Utils
 import { validateRequest } from '@open-cms/shared/utils';
 
-// Utils
+// Controller
 import { getContentBlockParentById, getContentBlockBySlug } from './controller';
 
 // Validation schemas

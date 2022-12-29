@@ -5,6 +5,9 @@ import { PrismaClient } from '@prisma/client';
 // Utils
 import { validateRequest } from '@open-cms/shared/utils';
 
+// Controller
+import { getContentBlockParentById } from '../content-blocks/controller';
+
 // Schemas
 import { searchQuerySchema } from './schema';
 
@@ -62,7 +65,19 @@ router.get('/', validateRequest(searchQuerySchema), async (req: Request, res: Re
       skip,
       where,
       include: {
-        version: true
+        version: {
+          include: {
+            variant: {
+              include: {
+                contentBlock: {
+                  include: {
+                    parents: true
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     });
 
@@ -76,17 +91,40 @@ router.get('/', validateRequest(searchQuerySchema), async (req: Request, res: Re
       pagination.next = paginationPage + 1;
     }
 
-    res.json({
-      pagination,
-      data: questions.map(question => {
-        const { version } = question;
-        const content = JSON.parse(version.content);
+    const mappedBlocks = await Promise.all(
+      questions.map(async (contentBlock) => {
+        let parentBlocks = [];
+        if (contentBlock.version.variant.contentBlock.parents.length) {
+          parentBlocks = await Promise.all(
+            contentBlock.version.variant.contentBlock.parents.map(async ({ parentId }) => {
+              const parentBlock = await getContentBlockParentById(parentId, site.id, publishingEnvironment.id, selectedLocale.code);
+              if (!parentBlock) return null;
+              const { version } = parentBlock;
+              const content = version.content ? JSON.parse(version.content) : '';
 
+              return {
+                name: content ? content.name : '',
+                slug: version.slug,
+                localeCode: version.localeCode
+              };
+            })
+          );
+          parentBlocks = parentBlocks.filter(Boolean);
+        }
+
+        const { version } = contentBlock;
+        const content = JSON.parse(version.content);
         return {
           ...content,
           slug: version.slug,
+          parents: parentBlocks
         };
-      }).sort((itemA, itemB) => {
+      })
+    );
+
+    res.json({
+      pagination,
+      data: mappedBlocks.sort((itemA, itemB) => {
         const aHasInQuestion = itemA.question.includes(term as string);
         const bHasInQuestion = itemB.question.includes(term as string);
         if (aHasInQuestion && !bHasInQuestion) return -1;
