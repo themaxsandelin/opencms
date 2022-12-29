@@ -22,7 +22,7 @@ function validateFormField(field: any, data: any) {
     };
   }
 
-  const value = escape(data[config.key]);
+  const value = data[config.key] ? escape(data[config.key]) : '';
   return {
     valid: true,
     value
