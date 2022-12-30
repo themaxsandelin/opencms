@@ -5,13 +5,16 @@ import { PrismaClient, Prisma } from '@prisma/client';
 // Shared
 import { validateRequest } from '@open-cms/shared/utils';
 
+// Utils
+import logger from '../../utils/logger';
+
 // Validation schemas
 import { queryPagesSchema } from './schema';
 
 const prisma = new PrismaClient();
 const router = Router();
 
-router.get('/', validateRequest(queryPagesSchema), async (req: Request, res: Response) => {
+router.get('/', validateRequest(queryPagesSchema, logger), async (req: Request, res: Response) => {
   try {
     const { slug, path } = req.query;
     const { selectedLocale, site } = req.body;
@@ -43,6 +46,7 @@ router.get('/', validateRequest(queryPagesSchema), async (req: Request, res: Res
 
     res.json({ data: pageInstances });
   } catch (error) {
+    logger.error(error);
     res.status(500).json({ error: error.message });
   }
 });

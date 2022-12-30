@@ -2,8 +2,11 @@
 import { Router, Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 
-// Utils
+// Shared
 import { validateRequest } from '@open-cms/shared/utils';
+
+// Utils
+import logger from '../../utils/logger';
 
 // Validation schemas
 import { createLocaleSchema } from './schema';
@@ -25,12 +28,12 @@ router.get('/', async (req: Request, res: Response) => {
 
     res.json({ data: locales });
   } catch (error) {
-    console.error('Failed to fetch locales', error);
+    logger.error('Failed to fetch locales', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
 
-router.post('/', validateRequest(createLocaleSchema), async (req: Request, res: Response) => {
+router.post('/', validateRequest(createLocaleSchema, logger), async (req: Request, res: Response) => {
   try {
     const { name, code, user } = req.body;
     const existingLocaleByCode = await prisma.locale.findFirst({
@@ -63,7 +66,7 @@ router.post('/', validateRequest(createLocaleSchema), async (req: Request, res: 
 
     res.json({ data: locale });
   } catch (error) {
-    console.error('Failed to add new locale', error);
+    logger.error('Failed to add new locale', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -76,7 +79,7 @@ router.get('/options', async (req: Request, res: Response) => {
       data: localeOptions.filter(localeOption => !locales.find(locale => locale.code === localeOption.code))
     });
   } catch (error) {
-    console.error('Failed to get locale options', error);
+    logger.error('Failed to get locale options', error);
     res.status(500).json({ error: 'Server error' });
   }
 });

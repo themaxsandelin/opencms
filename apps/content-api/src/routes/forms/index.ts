@@ -3,20 +3,25 @@ import { Router, Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import multer from 'multer';
 
-// Utils
-import { validateRequest } from '@open-cms/shared/utils';
-
 // Schemas
 import { formSubmissionSchema } from './schema';
 
 // Controller
 import { getPublishedFormVersion, getFormOnPagesByPath, validateFormData, validateSubmissionFiles, handleSubmissionFiles, deleteRequestFiles, validateFormToken, deleteFormToken } from './controller';
 
+// Shared
+import { validateRequest } from '@open-cms/shared/utils';
+
+// Utils
+
+// Utils
+import logger from '../../utils/logger';
+
 // Workaround NX overwriting env variables at build time.
 const env = {...process}.env;
 const uploadDir = env.UPLOAD_DIR;
 if (!uploadDir) {
-  console.error('You have to define an upload directory using the environment variable UPLOAD_DIR.');
+  logger.error('You have to define an upload directory using the environment variable UPLOAD_DIR.');
   process.exit(0);
 }
 
@@ -36,7 +41,7 @@ const upload = multer({
   limits: {},
 });
 
-router.post('/:id', [upload.array('files[]'), validateRequest(formSubmissionSchema)], async (req: Request, res: Response) => {
+router.post('/:id', [upload.array('files[]'), validateRequest(formSubmissionSchema, logger)], async (req: Request, res: Response) => {
   try {
     const { pagePath } = req.query;
     const { selectedLocale, publishingEnvironment, site } = req.body;
@@ -98,7 +103,7 @@ router.post('/:id', [upload.array('files[]'), validateRequest(formSubmissionSche
     const files = req.files as Express.Multer.File[];
     await deleteRequestFiles(files);
 
-    console.error(error);
+    logger.error(error);
     res.status(500).json({ error: error.message });
   }
 });

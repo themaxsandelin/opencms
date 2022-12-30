@@ -5,6 +5,9 @@ import { PrismaClient } from '@prisma/client';
 // Routers
 import FilesRouter from './files';
 
+// Utils
+import logger from '../../../utils/logger';
+
 const prisma = new PrismaClient();
 const router = Router({ mergeParams: true });
 
@@ -33,7 +36,7 @@ router.get('/', async (req: Request, res: Response) => {
       }))
     });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -67,7 +70,7 @@ router.use('/:submissionId', async (req: Request, res: Response, next: NextFunct
     };
     next();
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -77,7 +80,7 @@ router.get('/:submissionId', async (req: Request, res: Response) => {
     const { formSubmission } = req.body;
     res.json({ data: formSubmission });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res.status(500).json({ error: error.message });
   }
 });

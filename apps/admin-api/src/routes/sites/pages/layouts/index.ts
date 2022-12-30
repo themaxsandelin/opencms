@@ -6,6 +6,7 @@ import { PrismaClient } from '@prisma/client';
 import VersionsRouter from './versions';
 
 // Utils
+import logger from '../../../../utils/logger';
 import { validateRequest } from '@open-cms/shared/utils';
 import { deletePageInstanceLayoutByPageLayoutId } from '../instances/layouts/controller';
 
@@ -27,12 +28,12 @@ router.get('/', async (req: Request, res: Response) => {
 
     res.json({ data: layouts });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res.status(500).json({ error: error.message });
   }
 });
 
-router.post('/', validateRequest(createLayoutSchema), async (req: Request, res: Response) => {
+router.post('/', validateRequest(createLayoutSchema, logger), async (req: Request, res: Response) => {
   try {
     const { name, page, user } = req.body;
 
@@ -57,7 +58,7 @@ router.post('/', validateRequest(createLayoutSchema), async (req: Request, res: 
 
     res.json({ data: pageLayout });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -78,7 +79,7 @@ router.use('/:layoutId', async (req: Request, res: Response, next: NextFunction)
     req.body.pageLayout = pageLayout;
     next();
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -88,12 +89,12 @@ router.get('/:layoutId', async (req: Request, res: Response) => {
     const { pageLayout } = req.body;
     res.json({ data: pageLayout });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res.status(500).json({ error: error.message });
   }
 });
 
-router.patch('/:layoutId', validateRequest(updateLayoutSchema), async (req: Request, res: Response) => {
+router.patch('/:layoutId', validateRequest(updateLayoutSchema, logger), async (req: Request, res: Response) => {
   try {
     const { name, pageLayout, user } = req.body;
     if (!name) {
@@ -121,7 +122,7 @@ router.patch('/:layoutId', validateRequest(updateLayoutSchema), async (req: Requ
 
     res.json({ data: { updated: true } });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -153,7 +154,7 @@ router.delete('/:layoutId', async (req: Request, res: Response) => {
 
     res.json({ data: { deleted: true } });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res.status(500).json({ error: error.message });
   }
 });

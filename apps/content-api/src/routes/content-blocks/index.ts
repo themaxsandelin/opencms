@@ -2,19 +2,22 @@
 import { Router, Request, Response } from 'express';
 import { Prisma, PrismaClient } from '@prisma/client';
 
-// Utils
-import { validateRequest } from '@open-cms/shared/utils';
-
 // Controller
 import { getContentBlockParentById, getContentBlockBySlug } from './controller';
 
 // Validation schemas
 import { queryContentBlockSchema } from './schema';
 
+// Shared
+import { validateRequest } from '@open-cms/shared/utils';
+
+// Utils
+import logger from '../../utils/logger';
+
 const prisma = new PrismaClient();
 const router = Router();
 
-router.get('/', validateRequest(queryContentBlockSchema), async (req: Request, res: Response) => {
+router.get('/', validateRequest(queryContentBlockSchema, logger), async (req: Request, res: Response) => {
   try {
     const { selectedLocale, publishingEnvironment, site } = req.body;
     const { type, parentSlug, siblingSlug, limit, page } = req.query;
@@ -191,7 +194,7 @@ router.get('/', validateRequest(queryContentBlockSchema), async (req: Request, r
 
     res.json({ data: mappedBlocks, pagination });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res.status(500).json({ error: error.message });
   }
 });

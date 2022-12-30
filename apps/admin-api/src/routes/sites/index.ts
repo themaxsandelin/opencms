@@ -6,6 +6,7 @@ import { Prisma, PrismaClient } from '@prisma/client';
 import PageRouter from './pages';
 
 // Utils
+import logger from '../../utils/logger';
 import { validateRequest } from '@open-cms/shared/utils';
 
 // Data schema
@@ -24,12 +25,12 @@ router.get('/', async (req: Request, res: Response) => {
     });
     res.json({ data: sites });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res.status(500).json({ error: error.message });
   }
 });
 
-router.post('/', validateRequest(createSiteSchema), async (req: Request, res: Response) => {
+router.post('/', validateRequest(createSiteSchema, logger), async (req: Request, res: Response) => {
   try {
     const { name, key, user } = req.body;
     const site = await prisma.site.create({
@@ -58,7 +59,7 @@ router.post('/', validateRequest(createSiteSchema), async (req: Request, res: Re
         return res.status(400).json({ error: 'The key is already being used by a different site.' });
       }
     }
-    console.error(error);
+    logger.error(error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -82,7 +83,7 @@ router.use('/:siteId', async (req: Request, res: Response, next: NextFunction) =
     req.body.site = site;
     next();
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -93,12 +94,12 @@ router.get('/:siteId', (req: Request, res: Response) => {
     // Pass along the already fetched site from the middleware
     res.json({ data: site });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res.status(500).json({ error: error.message });
   }
 });
 
-router.patch('/:siteId', validateRequest(updateSiteSchema), async (req: Request, res: Response) => {
+router.patch('/:siteId', validateRequest(updateSiteSchema, logger), async (req: Request, res: Response) => {
   try {
     const { name, key, site, user } = req.body;
     if (name || key) {
@@ -141,7 +142,7 @@ router.patch('/:siteId', validateRequest(updateSiteSchema), async (req: Request,
       res.json({ data: { updated: false } });
     }
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res.status(500).json({ error: error.message });
   }
 });

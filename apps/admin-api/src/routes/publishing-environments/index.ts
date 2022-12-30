@@ -2,8 +2,11 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { Prisma, PrismaClient } from '@prisma/client';
 
-// Utils
+// Shared
 import { validateRequest } from '@open-cms/shared/utils';
+
+// Utils
+import logger from '../../utils/logger';
 
 // Validation schemas
 import { createPublishingEnvironmentSchema } from './schema';
@@ -21,12 +24,12 @@ router.get('/', async (req: Request, res: Response) => {
     });
     res.json({ data: publishingEnvironments });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res.status(500).json({ error: error.message });
   }
 });
 
-router.post('/', validateRequest(createPublishingEnvironmentSchema), async (req: Request, res: Response) => {
+router.post('/', validateRequest(createPublishingEnvironmentSchema, logger), async (req: Request, res: Response) => {
   try {
     const { name, key, user } = req.body;
 
@@ -56,7 +59,7 @@ router.post('/', validateRequest(createPublishingEnvironmentSchema), async (req:
         return res.status(400).json({ error: 'The key is already being used by a different environment.' });
       }
     }
-    console.error(error);
+    logger.error(error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -75,7 +78,7 @@ router.use('/:id', async (req: Request, res: Response, next: NextFunction) => {
     req.body.publishingEnvironment = publishingEnvironment;
     next();
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -85,7 +88,7 @@ router.get('/:id', async (req: Request, res: Response) => {
     const { publishingEnvironment } = req.body;
     res.json({ data: publishingEnvironment });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res.status(500).json({ error: error.message });
   }
 });

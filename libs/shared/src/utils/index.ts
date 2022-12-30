@@ -1,11 +1,12 @@
 // Dependencies
-import { NextFunction, Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { AnyZodObject, ZodError } from 'zod';
 import { PrismaClient } from '@prisma/client';
+import { Logger } from 'pino';
 
 const prisma = new PrismaClient();
 
-export function validateRequest(schema: AnyZodObject) {
+export function validateRequest(schema: AnyZodObject, logger: Logger) {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
       await schema.parseAsync({
@@ -54,6 +55,8 @@ export function validateRequest(schema: AnyZodObject) {
 
       return next();
     } catch (error) {
+      logger.error(error);
+
       if (error instanceof ZodError) {
         return res.status(400).json({ error: error.issues[0].message });
       }

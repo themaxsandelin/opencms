@@ -2,8 +2,11 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
 
-// Utils
+// Shared
 import { validateRequest } from '@open-cms/shared/utils';
+
+// Utils
+import logger from '../../../../../utils/logger';
 
 // Schemas
 import { createInstanceLayoutSchema } from './schema';
@@ -22,12 +25,12 @@ router.get('/', async (req: Request, res: Response) => {
 
     res.json({ data: pageInstanceLayouts });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res.status(500).json({ error: error.message });
   }
 });
 
-router.post('/', validateRequest(createInstanceLayoutSchema), async (req: Request, res: Response) => {
+router.post('/', validateRequest(createInstanceLayoutSchema, logger), async (req: Request, res: Response) => {
   try {
     const { layoutId, publishingEnvironmentId, pageInstance, user } = req.body;
 
@@ -88,7 +91,7 @@ router.post('/', validateRequest(createInstanceLayoutSchema), async (req: Reques
 
     res.json({ data: pageInstanceLayout });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -109,7 +112,7 @@ router.use('/:pageInstanceLayoutId', async (req: Request, res: Response, next: N
     req.body.pageInstanceLayout = pageInstanceLayout;
     next();
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res.status(500).json({ error: error.message });
   }
 });

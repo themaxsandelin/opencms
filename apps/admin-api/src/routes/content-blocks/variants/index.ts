@@ -5,8 +5,11 @@ import { Prisma, PrismaClient } from '@prisma/client';
 // Routers
 import VersionRouter from './versions';
 
-// Utils
+// Shared
 import { validateRequest } from '@open-cms/shared/utils';
+
+// Utils
+import logger from '../../../utils/logger';
 
 // Validation schema
 import { createVariantSchema, patchVariantSchema } from './schema';
@@ -35,12 +38,12 @@ router.get('/', async (req: Request, res: Response) => {
     });
     return res.json({ data: variants });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res.status(500).json({ error: error.message });
   }
 });
 
-router.post('/', validateRequest(createVariantSchema), async (req: Request, res: Response) => {
+router.post('/', validateRequest(createVariantSchema, logger), async (req: Request, res: Response) => {
   try {
     const { name, sites, contentBlock, user } = req.body;
     const createQuery: Prisma.ContentBlockVariantCreateArgs = {
@@ -87,7 +90,7 @@ router.post('/', validateRequest(createVariantSchema), async (req: Request, res:
 
     res.json({ data: variant });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -107,7 +110,7 @@ router.use('/:variantId', async (req: Request, res: Response, next: NextFunction
     req.body.contentBlockVariant = variant;
     next();
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -147,12 +150,12 @@ router.get('/:variantId', async (req: Request, res: Response) => {
       }
     });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res.status(500).json({ error: error.message });
   }
 });
 
-router.patch('/:variantId', validateRequest(patchVariantSchema), async (req: Request, res: Response) => {
+router.patch('/:variantId', validateRequest(patchVariantSchema, logger), async (req: Request, res: Response) => {
   try {
     const { name, sites, contentBlockVariant, user } = req.body;
 
@@ -220,7 +223,7 @@ router.patch('/:variantId', validateRequest(patchVariantSchema), async (req: Req
 
     res.json({ data: { updated: false } });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res.status(500).json({ error: error.message });
   }
 });

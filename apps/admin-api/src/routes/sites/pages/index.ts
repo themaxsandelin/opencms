@@ -11,6 +11,7 @@ import { pageInstanceSlugsAreUniqueOnParentPage } from './controller';
 import { updateAllPageInstancePaths } from './instances/controller';
 
 // Utils
+import logger from '../../../utils/logger';
 import { validateRequest } from '@open-cms/shared/utils';
 
 // Schemas
@@ -42,12 +43,12 @@ router.get('/', async (req: Request, res: Response) => {
 
     res.json({ data: pages });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res.status(500).json({ error: error.message });
   }
 });
 
-router.post('/', validateRequest(createPageSchema), async (req: Request, res: Response) => {
+router.post('/', validateRequest(createPageSchema, logger), async (req: Request, res: Response) => {
   try {
     const { name, isFrontPage, parentId, user } = req.body;
     const { siteId } = req.params;
@@ -102,7 +103,7 @@ router.post('/', validateRequest(createPageSchema), async (req: Request, res: Re
 
     res.status(201).json({ data: page });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -122,7 +123,7 @@ router.use('/:pageId', async (req: Request, res: Response, next: NextFunction) =
     req.body.page = page;
     next();
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -133,12 +134,12 @@ router.get('/:pageId', async (req: Request, res: Response) => {
 
     return res.json({ data: page });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res.status(500).json({ error: error.message });
   }
 });
 
-router.patch('/:pageId', validateRequest(patchPageSchema), async (req: Request, res: Response) => {
+router.patch('/:pageId', validateRequest(patchPageSchema, logger), async (req: Request, res: Response) => {
   try {
     const { name, isFrontPage, parentId, page, user } = req.body;
 
@@ -241,7 +242,7 @@ router.patch('/:pageId', validateRequest(patchPageSchema), async (req: Request, 
 
     res.json({ data: { updated: true } });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res.status(500).json({ error: error.message });
   }
 });

@@ -10,6 +10,7 @@ import { updateAllChildPagesInstancePaths } from './controller';
 import { deletePageInstanceLayoutByPageInstanceId } from './layouts/controller';
 
 // Utils
+import logger from '../../../../utils/logger';
 import { validateRequest } from '@open-cms/shared/utils';
 
 // Schemas
@@ -35,12 +36,12 @@ router.get('/', async (req: Request, res: Response) => {
 
     res.json({ data: instances });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res.status(500).json({ error: error.message });
   }
 });
 
-router.post('/', validateRequest(createInstanceSchema), async (req: Request, res: Response) => {
+router.post('/', validateRequest(createInstanceSchema, logger), async (req: Request, res: Response) => {
   try {
     const { page, title, description, slug, localeCode, user } = req.body;
 
@@ -109,7 +110,7 @@ router.post('/', validateRequest(createInstanceSchema), async (req: Request, res
 
     res.status(201).json({ data: instance });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -132,7 +133,7 @@ router.use('/:instanceId', async (req: Request, res: Response, next: NextFunctio
     req.body.pageInstance = instance;
     next();
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -148,12 +149,12 @@ router.get('/:instanceId', (req: Request, res: Response) => {
       }
     });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res.status(500).json({ error: error.message });
   }
 });
 
-router.patch('/:instanceId', validateRequest(updateInstanceSchema), async (req: Request, res: Response) => {
+router.patch('/:instanceId', validateRequest(updateInstanceSchema, logger), async (req: Request, res: Response) => {
   try {
     const { title, description, slug, page, pageInstance, config, user } = req.body;
 
@@ -212,7 +213,7 @@ router.patch('/:instanceId', validateRequest(updateInstanceSchema), async (req: 
 
     res.json({ data: { updated: true } });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -244,7 +245,7 @@ router.delete('/:instanceId', async (req: Request, res: Response) => {
 
     res.json({ data: { deleted: true } });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res.status(500).json({ error: error.message });
   }
 });

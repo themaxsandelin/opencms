@@ -6,6 +6,7 @@ import { PrismaClient } from '@prisma/client';
 import { validateRequest } from '@open-cms/shared/utils';
 
 // Utils
+import logger from '../../utils/logger';
 import { completeComponentReferences, findPageInstanceListFromPath } from './controller';
 
 // Validation schemas
@@ -14,7 +15,7 @@ import { queryContentSchema } from './schema';
 const prisma = new PrismaClient();
 const router = Router();
 
-router.get('/', validateRequest(queryContentSchema), async (req: Request, res: Response) => {
+router.get('/', validateRequest(queryContentSchema, logger), async (req: Request, res: Response) => {
   try {
     const { selectedLocale, publishingEnvironment, site } = req.body;
     const { pagePath } = req.query;
@@ -97,7 +98,7 @@ router.get('/', validateRequest(queryContentSchema), async (req: Request, res: R
       }
     });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res.status(500).json({ error: error.message });
   }
 });

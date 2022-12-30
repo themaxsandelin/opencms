@@ -3,6 +3,7 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
 
 // Utils
+import logger from '../../../../../utils/logger';
 import { validateRequest } from '@open-cms/shared/utils';
 
 // Validation schema
@@ -37,7 +38,7 @@ router.get('/', async (req: Request, res: Response) => {
       }))
     });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -66,7 +67,7 @@ router.post('/', async (req: Request, res: Response) => {
 
     res.json({ data: version });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -86,7 +87,7 @@ router.use('/:versionId', async (req: Request, res: Response, next: NextFunction
     req.body.pageLayoutVersion = pageLayoutVersion;
     next();
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -96,7 +97,7 @@ router.get('/:versionId', async (req: Request, res: Response) => {
     const { pageLayoutVersion } = req.body;
     res.json({ data: pageLayoutVersion });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -131,12 +132,12 @@ router.patch('/:versionId', async (req: Request, res: Response) => {
 
     res.json({ data: { updated: true } });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res.status(500).json({ error: error.message });
   }
 });
 
-router.post('/:versionId/publish', validateRequest(publishVersionSchema), async (req: Request, res: Response) => {
+router.post('/:versionId/publish', validateRequest(publishVersionSchema, logger), async (req: Request, res: Response) => {
   try {
     const { environment: environmentId, pageLayoutVersion, pageLayout, user } = req.body;
 
@@ -211,7 +212,7 @@ router.post('/:versionId/publish', validateRequest(publishVersionSchema), async 
 
     res.json({ data: { published: true } });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res.status(500).json({ error: error.message });
   }
 });

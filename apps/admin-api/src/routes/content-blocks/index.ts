@@ -5,8 +5,11 @@ import { PrismaClient, Prisma, ContentBlock } from '@prisma/client';
 // Routers
 import VariantRouter from './variants';
 
-// Utils
+// Shared
 import { validateRequest } from '@open-cms/shared/utils';
+
+// Utils
+import logger from '../../utils/logger';
 
 // Data schema
 import { createContentBlockSchema, patchContentBlockSchema } from './schema';
@@ -74,12 +77,12 @@ router.get('/', async (req: Request, res: Response) => {
       })
     });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res.status(500).json({ error: error.message });
   }
 });
 
-router.post('/', validateRequest(createContentBlockSchema), async (req: Request, res: Response) => {
+router.post('/', validateRequest(createContentBlockSchema, logger), async (req: Request, res: Response) => {
   try {
     const { name, type, parentIds, user } = req.body;
 
@@ -107,7 +110,7 @@ router.post('/', validateRequest(createContentBlockSchema), async (req: Request,
           })
         );
       } catch (error) {
-        console.error(error);
+        logger.error(error);
         return res.status(400).json({ error: error.message });
       }
     }
@@ -146,7 +149,7 @@ router.post('/', validateRequest(createContentBlockSchema), async (req: Request,
 
     res.json({ data: contentBlock });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -171,7 +174,7 @@ router.use('/:blockId', async (req: Request, res: Response, next: NextFunction) 
     req.body.contentBlock = contentBlock;
     next();
   } catch (error) {
-    console.error('Server error', error);
+    logger.error('Server error', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -181,12 +184,12 @@ router.get('/:blockId', (req: Request, res: Response) => {
     const { contentBlock } = req.body;
     res.json({ data: contentBlock });
   } catch (error) {
-    console.error('Server error', error);
+    logger.error('Server error', error);
     res.status(500).json({ error: error.message });
   }
 });
 
-router.patch('/:blockId', validateRequest(patchContentBlockSchema), async (req: Request, res: Response) => {
+router.patch('/:blockId', validateRequest(patchContentBlockSchema, logger), async (req: Request, res: Response) => {
   try {
     const { name, contentBlock, user } = req.body;
     const parentIds = req.body.parentIds || [];
@@ -273,7 +276,7 @@ router.patch('/:blockId', validateRequest(patchContentBlockSchema), async (req: 
 
     res.json({ data: { updated: true } });
   } catch (error) {
-    console.error('Server error', error);
+    logger.error('Server error', error);
     res.status(500).json({ error: error.message });
   }
 });

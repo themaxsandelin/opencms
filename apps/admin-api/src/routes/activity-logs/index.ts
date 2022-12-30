@@ -5,13 +5,16 @@ import { PrismaClient, Prisma } from '@prisma/client';
 // Schemas
 import { getActivityLogs } from './schema';
 
-// Utils
+// Shared
 import { validateRequest } from '@open-cms/shared/utils/index';
+
+// Utils
+import logger from '../../utils/logger';
 
 const prisma = new PrismaClient();
 const router = Router();
 
-router.get('/', validateRequest(getActivityLogs), async (req: Request, res: Response) => {
+router.get('/', validateRequest(getActivityLogs, logger), async (req: Request, res: Response) => {
   try {
     const { search, page, sortBy, sort } = req.query;
     const take = 20;
@@ -70,7 +73,7 @@ router.get('/', validateRequest(getActivityLogs), async (req: Request, res: Resp
 
     res.json({ data: logs, pagination });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res.status(500).json({ error: error.message });
   }
 });

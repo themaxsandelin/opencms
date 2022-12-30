@@ -2,19 +2,22 @@
 import { Router, Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 
-// Utils
-import { validateRequest } from '@open-cms/shared/utils';
-
 // Controller
 import { getContentBlockParentById } from '../content-blocks/controller';
 
 // Schemas
 import { searchQuerySchema } from './schema';
 
+// Shared
+import { validateRequest } from '@open-cms/shared/utils';
+
+// Utils
+import logger from '../../utils/logger';
+
 const prisma = new PrismaClient();
 const router = Router();
 
-router.get('/', validateRequest(searchQuerySchema), async (req: Request, res: Response) => {
+router.get('/', validateRequest(searchQuerySchema, logger), async (req: Request, res: Response) => {
   try {
     const { selectedLocale, publishingEnvironment, site } = req.body;
 
@@ -133,7 +136,7 @@ router.get('/', validateRequest(searchQuerySchema), async (req: Request, res: Re
       })
     });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res.status(500).json({ error: error.message });
   }
 });

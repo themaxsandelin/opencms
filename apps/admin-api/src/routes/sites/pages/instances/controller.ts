@@ -1,5 +1,5 @@
 // Dependencies
-import { PrismaClient, Page, PageInstance, User } from '@prisma/client';
+import { PrismaClient, Page, User } from '@prisma/client';
 
 const prisma = new PrismaClient();
 

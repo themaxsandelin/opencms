@@ -2,8 +2,11 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
 
-// Utils
+// Shared
 import { validateRequest } from '@open-cms/shared/utils';
+
+// Utils
+import logger from '../../utils/logger';
 
 // Schemas
 import { createFormSchema, patchFormSchema } from './schema';
@@ -29,12 +32,12 @@ router.get('/', async (req: Request, res: Response) => {
 
     return res.json({ data: forms });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res.status(500).json({ error: error.message });
   }
 });
 
-router.post('/', validateRequest(createFormSchema), async (req: Request, res: Response) => {
+router.post('/', validateRequest(createFormSchema, logger), async (req: Request, res: Response) => {
   try {
     const { name, user } = req.body;
     const form = await prisma.form.create({
@@ -57,7 +60,7 @@ router.post('/', validateRequest(createFormSchema), async (req: Request, res: Re
 
     res.json({ data: form });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -77,7 +80,7 @@ router.use('/:formId', async (req: Request, res: Response, next: NextFunction) =
     req.body.form = form;
     next();
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -88,12 +91,12 @@ router.get('/:formId', (req: Request, res: Response) => {
 
     res.json({ data: form });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res.status(500).json({ error: error.message });
   }
 });
 
-router.patch('/:formId', validateRequest(patchFormSchema), async (req: Request, res: Response) => {
+router.patch('/:formId', validateRequest(patchFormSchema, logger), async (req: Request, res: Response) => {
   try {
     const { formId } = req.params;
     const { name, user } = req.body;
@@ -120,7 +123,7 @@ router.patch('/:formId', validateRequest(patchFormSchema), async (req: Request, 
 
     res.json({ data: { updated: true } });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res.status(500).json({ error: error.message });
   }
 });

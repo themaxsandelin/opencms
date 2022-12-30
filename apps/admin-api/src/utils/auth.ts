@@ -2,6 +2,9 @@
 import jwt from 'jsonwebtoken';
 import { PrismaClient } from '@prisma/client';
 
+// Shared
+import logger from './logger';
+
 // Workaround NX overwriting env variables at build time.
 const env = {...process}.env;
 
@@ -54,7 +57,7 @@ export async function authorizeUserByToken(token: string) {
 
     return { valid: true, user };
   } catch (error) {
-    console.error('JWT decoding error.', error);
+    logger.error(error, 'Auth error');
     return {
       valid: false,
       reason: 'decode-error',
