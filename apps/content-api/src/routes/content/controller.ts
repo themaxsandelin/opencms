@@ -259,7 +259,7 @@ function parseLocalizedInput(content: string, localeCode: string) {
   return searchString;
 }
 
-async function createFormVersionToken(versionId: string, siteId: string, environmentId: string, localeCode: string) {
+export async function createFormVersionToken(versionId: string, siteId: string, environmentId: string, localeCode: string) {
   // We might want to put this in a config in the future. But here it is. :)
   const lifetimeInHours = 1;
   const date = new Date();

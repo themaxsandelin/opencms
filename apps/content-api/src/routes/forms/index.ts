@@ -6,8 +6,9 @@ import multer from 'multer';
 // Schemas
 import { formSubmissionSchema } from './schema';
 
-// Controller
+// Controllers
 import { getPublishedFormVersion, getFormOnPagesByPath, validateFormData, validateSubmissionFiles, handleSubmissionFiles, deleteRequestFiles, validateFormToken, deleteFormToken } from './controller';
+import { createFormVersionToken } from '../content/controller';
 
 // Shared
 import { validateRequest } from '@open-cms/shared/utils';
@@ -97,7 +98,10 @@ router.post('/:id', [upload.array('files[]'), validateRequest(formSubmissionSche
     await handleSubmissionFiles(files, submission, uploadDir);
     await deleteFormToken(token);
 
-    res.json({ data: { submitted: true } });
+    // Generate a new token for the form to be resubmitted.
+    const newToken = await createFormVersionToken(publishedFormVersion.version.id, site.id, publishingEnvironment.id, selectedLocale.code);
+
+    res.json({ data: { submitted: true, token: newToken.id } });
   } catch (error) {
     // Ensure we delete any uploaded files in the case of a failed request.
     const files = req.files as Express.Multer.File[];
