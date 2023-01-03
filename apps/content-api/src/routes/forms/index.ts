@@ -7,7 +7,7 @@ import multer from 'multer';
 import { formSubmissionSchema } from './schema';
 
 // Controllers
-import { getPublishedFormVersion, getFormOnPagesByPath, validateFormData, validateSubmissionFiles, handleSubmissionFiles, deleteRequestFiles, validateFormToken, deleteFormToken } from './controller';
+import { getPreviouslyPublishedFormVersion, getFormOnPagesByPath, validateFormData, validateSubmissionFiles, handleSubmissionFiles, deleteRequestFiles, validateFormToken, deleteFormToken } from './controller';
 import { createFormVersionToken } from '../content/controller';
 
 // Shared
@@ -49,8 +49,8 @@ router.post('/:id', [upload.array('files[]'), validateRequest(formSubmissionSche
     const { id } = req.params;
     const files = req.files as Express.Multer.File[];
 
-    const publishedFormVersion = await getPublishedFormVersion(id, publishingEnvironment.id);
-    if (!publishedFormVersion) {
+    const formVersion = await getPreviouslyPublishedFormVersion(id);
+    if (!formVersion) {
       await deleteRequestFiles(files);
       return res.status(400).json({ error: 'Unknown form.' });
     }
@@ -62,19 +62,19 @@ router.post('/:id', [upload.array('files[]'), validateRequest(formSubmissionSche
       return res.status(400).json({ error: 'Invalid token.' });
     }
 
-    const pages = await getFormOnPagesByPath((pagePath as string), publishedFormVersion.version.formId, site.id, publishingEnvironment.id, selectedLocale.code);
+    const pages = await getFormOnPagesByPath((pagePath as string), formVersion.formId, site.id, publishingEnvironment.id, selectedLocale.code);
     if (!pages) {
       await deleteRequestFiles(files);
       return res.status(400).json({ error: 'Invalid form submission', details: { cause: 'Form not found on page.' } });
     }
 
-    const { valid, cause, fieldKey, data: formData } = await validateFormData(req.body, publishedFormVersion.version);
+    const { valid, cause, fieldKey, data: formData } = await validateFormData(req.body, formVersion);
     if (!valid) {
       await deleteRequestFiles(files);
       return res.status(400).json({ error: 'Invalid form submission', details: { cause, fieldKey } });
     }
 
-    const { valid: validFiles, cause: validFilesCause, fieldKey: validFilesKey } = await validateSubmissionFiles(files, publishedFormVersion.version);
+    const { valid: validFiles, cause: validFilesCause, fieldKey: validFilesKey } = await validateSubmissionFiles(files, formVersion);
     if (!validFiles) {
       await deleteRequestFiles(files);
       return res.status(400).json({ error: 'Invalid form submission', details: { cause: validFilesCause, fieldKey: validFilesKey } });
@@ -99,7 +99,7 @@ router.post('/:id', [upload.array('files[]'), validateRequest(formSubmissionSche
     await deleteFormToken(token);
 
     // Generate a new token for the form to be resubmitted.
-    const newToken = await createFormVersionToken(publishedFormVersion.version.id, site.id, publishingEnvironment.id, selectedLocale.code);
+    const newToken = await createFormVersionToken(formVersion.id, site.id, publishingEnvironment.id, selectedLocale.code);
 
     res.json({ data: { submitted: true, token: newToken.id } });
   } catch (error) {

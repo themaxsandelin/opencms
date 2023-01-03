@@ -43,6 +43,15 @@ export async function getPublishedFormVersion(id: string, environmentId: string)
   });
 }
 
+export async function getPreviouslyPublishedFormVersion(id: string) {
+  return prisma.formVersion.findFirst({
+    where: {
+      id,
+      wasPublished: true
+    }
+  });
+}
+
 export async function validateFormData(data: any, formVersion: FormVersion): Promise<ValidationResponse> {
   let response: ValidationResponse = {
     valid: true,
