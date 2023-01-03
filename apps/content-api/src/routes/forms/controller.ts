@@ -202,6 +202,7 @@ export async function getFormOnPagesByPath(path: string, formId: string, siteId:
         environmentId,
         version: {
           layout: {
+            deleted: false,
             page: {
               id: pageInstance.pageId
             }
