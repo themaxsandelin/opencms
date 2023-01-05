@@ -8,6 +8,7 @@ import { findPageInstanceListFromPath } from '../content/controller';
 
 // Types
 import { ValidationResponse } from '../../types/forms';
+import logger from '../../utils/logger';
 
 const prisma = new PrismaClient();
 
@@ -191,7 +192,12 @@ export async function handleSubmissionFiles(files: Array<Express.Multer.File>, s
 export async function deleteRequestFiles(files: Array<Express.Multer.File>) {
   await Promise.all(
     files.map(async (file) => {
-      await rm(file.path);
+      try {
+        await rm(file.path);
+      }
+      catch (e) {
+        logger.error(`Failed to delete file ${file.path}`);
+      }
     })
   );
 }
