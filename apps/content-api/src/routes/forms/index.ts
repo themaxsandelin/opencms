@@ -14,8 +14,6 @@ import { createFormVersionToken } from '../content/controller';
 import { validateRequest } from '@open-cms/shared/utils';
 
 // Utils
-
-// Utils
 import logger from '../../utils/logger';
 
 // Workaround NX overwriting env variables at build time.
