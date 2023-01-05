@@ -190,13 +190,15 @@ export async function handleSubmissionFiles(files: Array<Express.Multer.File>, s
 }
 
 export async function deleteRequestFiles(files: Array<Express.Multer.File>) {
+  logger.info(`Deleting ${files.length} files`);
   await Promise.all(
     files.map(async (file) => {
       try {
-        await rm(file.path);
-      }
-      catch (e) {
+        logger.info(`Deleting ${file.path} files`);
+        return await rm(file.path);
+      } catch (e) {
         logger.error(`Failed to delete file ${file.path}`);
+        return false;
       }
     })
   );
