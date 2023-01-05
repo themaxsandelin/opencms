@@ -52,32 +52,37 @@ router.post('/:id', [upload.array('files[]'), validateRequest(formSubmissionSche
     const formVersion = await getPreviouslyPublishedFormVersion(id);
     if (!formVersion) {
       await deleteRequestFiles(files);
-      return res.status(400).json({ error: 'Unknown form.' });
+      logger.warn(`Invalid form submission: Unknown form version ${formVersion}`);
+      return res.status(404).json({ error: 'Unknown form.' });
     }
 
     const token = (req.headers['x-form-token'] as string);
     const validToken = await validateFormToken(token, site.id, publishingEnvironment.id, selectedLocale.code);
     if (!validToken) {
       await deleteRequestFiles(files);
+      logger.warn(`Invalid form submission: Bad token ${token}`);
       return res.status(400).json({ error: 'Invalid token.' });
     }
 
     const pages = await getFormOnPagesByPath((pagePath as string), formVersion.formId, site.id, publishingEnvironment.id, selectedLocale.code);
     if (!pages) {
       await deleteRequestFiles(files);
-      return res.status(400).json({ error: 'Invalid form submission', details: { cause: 'Form not found on page.' } });
+      logger.warn(`Invalid form submission: Form not found on page ${pagePath}, form ${formVersion.formId} for env ${publishingEnvironment.id} and locale ${selectedLocale.code}`);
+      return res.status(404).json({ error: 'Invalid form submission', details: { cause: 'Form not found on page.' } });
     }
 
     const { valid, cause, fieldKey, data: formData } = await validateFormData(req.body, formVersion);
     if (!valid) {
       await deleteRequestFiles(files);
+      logger.warn(`Invalid form submission: '${cause}' '${fieldKey}'`);
       return res.status(400).json({ error: 'Invalid form submission', details: { cause, fieldKey } });
     }
 
-    const { valid: validFiles, cause: validFilesCause, fieldKey: validFilesKey } = await validateSubmissionFiles(files, formVersion);
+    const { valid: validFiles, cause: validFilesCause, fieldKey: validFilesKey, status } = await validateSubmissionFiles(files, formVersion);
     if (!validFiles) {
       await deleteRequestFiles(files);
-      return res.status(400).json({ error: 'Invalid form submission', details: { cause: validFilesCause, fieldKey: validFilesKey } });
+      logger.warn(`Invalid form submission: '${validFilesCause}' '${validFilesKey}'`);
+      return res.status(status).json({ error: 'Invalid form submission', details: { cause: validFilesCause, fieldKey: validFilesKey } });
     }
 
     formData.dynamic = {};
