@@ -9,37 +9,47 @@ import { findPageInstanceListFromPath } from '../content/controller';
 // Types
 import { ValidationResponse } from '../../types/forms';
 
+// Utils
+import logger from '../../utils/logger';
+
 const prisma = new PrismaClient();
 
-function validateFormField(field: any, data: any) {
+function validateFormField(field: any, data: any): ValidationResponse {
   const { config } = field;
-  const fieldHasValue = Object.prototype.hasOwnProperty.call(data, config.key) && data[config.key] !== '';
+  const fieldHasValue =
+    Object.prototype.hasOwnProperty.call(data, config.key) &&
+    data[config.key] !== '';
   if (!fieldHasValue && config.alwaysRequired) {
     return {
       valid: false,
       cause: 'missing-required',
-      fieldKey: config.key
+      fieldKey: config.key,
+      status: 400,
     };
   }
 
   const value = data[config.key] ? escape(data[config.key]) : '';
   return {
     valid: true,
-    value
+    value,
+    status: 200,
   };
 }
 
-export async function getPublishedFormVersion(id: string, environmentId: string) {
+export async function getPublishedFormVersion(
+  id: string,
+  environmentId: string
+) {
   return prisma.formVersionPublication.findFirst({
     where: {
       environmentId,
       version: {
-        id
-      }
+        id,
+      },
     },
     include: {
-      version: true
-    }
+      version: true,
+    },
   });
 }
 
@@ -47,15 +57,19 @@ export async function getPreviouslyPublishedFormVersion(id: string) {
   return prisma.formVersion.findFirst({
     where: {
       id,
-      wasPublished: true
-    }
+      wasPublished: true,
+    },
   });
 }
 
-export async function validateFormData(data: any, formVersion: FormVersion): Promise<ValidationResponse> {
+export async function validateFormData(
+  data: any,
+  formVersion: FormVersion
+): Promise<ValidationResponse> {
   let response: ValidationResponse = {
     valid: true,
-    data: {}
+    data: {},
+    status: 200,
   };
 
   const { fields } = JSON.parse(formVersion.config);
@@ -77,34 +91,42 @@ export async function validateFormData(data: any, formVersion: FormVersion): Pro
   return response;
 }
 
-async function createSubmissionFile(file: Express.Multer.File, submissionId: string) {
+async function createSubmissionFile(
+  file: Express.Multer.File,
+  submissionId: string
+) {
   return prisma.formVersionSubmissionFile.create({
     data: {
       mimeType: file.mimetype,
       size: file.size,
       originalName: file.originalname,
       submissionId,
-    }
+    },
   });
 }
 
-export async function validateSubmissionFiles(files: Array<Express.Multer.File>, formVersion: FormVersion): Promise<ValidationResponse> {
+export async function validateSubmissionFiles(
+  files: Array<Express.Multer.File>,
+  formVersion: FormVersion
+): Promise<ValidationResponse> {
   let fileCountLimit = 5;
   const fileSizeLimit = 5000000; // 5mb
 
   let response: ValidationResponse = {
     valid: true,
-    data: {}
+    data: {},
+    status: 200,
   };
 
   const { fields } = JSON.parse(formVersion.config);
-  const fileField = fields.find(field => field.type === 'file');
+  const fileField = fields.find((field) => field.type === 'file');
   if (!fileField) {
     if (files && files.length) {
       return {
         valid: false,
         cause: 'files-not-accepted',
-        fieldKey: null
+        fieldKey: null,
+        status: 415,
       };
     } else {
       return response;
@@ -121,6 +143,7 @@ export async function validateSubmissionFiles(files: Array<Express.Multer.File>,
     response.valid = false;
     response.cause = 'too-many-files';
     response.fieldKey = fileField.config.key;
+    response.status = 413;
     return response;
   }
 
@@ -136,7 +159,8 @@ export async function validateSubmissionFiles(files: Array<Express.Multer.File>,
       response = {
         valid: false,
         cause: 'invalid-file-type',
-        fieldKey: fileField.config.key
+        fieldKey: fileField.config.key,
+        status: 415,
       };
       break;
     }
@@ -144,7 +168,8 @@ export async function validateSubmissionFiles(files: Array<Express.Multer.File>,
       response = {
         valid: false,
         cause: 'size-limit-reached',
-        fieldKey: fileField.config.key
+        fieldKey: fileField.config.key,
+        status: 413,
       };
       break;
     }
@@ -167,9 +192,16 @@ export async function handleSubmissionFiles(files: Array<Express.Multer.File>, s
 }
 
 export async function deleteRequestFiles(files: Array<Express.Multer.File>) {
+  logger.info(`Deleting ${files.length} files`);
   await Promise.all(
     files.map(async (file) => {
-      await rm(file.path);
+      try {
+        logger.info(`Deleting ${file.path} files`);
+        return await rm(file.path);
+      } catch (e) {
+        logger.error(`Failed to delete file ${file.path}`);
+        return false;
+      }
     })
   );
 }
