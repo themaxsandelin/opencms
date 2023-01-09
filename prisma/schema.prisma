@@ -337,6 +337,18 @@ model FormVersionSubmissionFile {
   updatedAt DateTime @updatedAt @default(now())
 }
 
+model Translation {
+  id String @id @default(uuid())
+  key String
+  value String @db.NVarChar(MAX)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt @default(now())
+  createdBy User @relation("translationCreatedByUser", fields: [createdByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdByUserId String
+  updatedBy User @relation("translationUpdatedByUser", fields: [updatedByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  updatedByUserId String
+}
+
 model User {
   id String @id @default(uuid())
   adUsername String
@@ -381,4 +393,6 @@ model User {
   createdFormVersionPublications FormVersionPublication[] @relation("formVersionPublicationCreatedByUser")
   updatedFormVersionPublications FormVersionPublication[] @relation("formVersionPublicationUpdatedByUser")
   createdLogs ActivityLog[] @relation("logCreatedByUser")
+  createdTranslations Translation[] @relation("translationCreatedByUser")
+  updatedTranslations Translation[] @relation("translationUpdatedByUser")
 }

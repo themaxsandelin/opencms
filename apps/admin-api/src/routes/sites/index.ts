@@ -5,9 +5,11 @@ import { Prisma, PrismaClient } from '@prisma/client';
 // Routers
 import PageRouter from './pages';
 
+// Shared
+import { validateRequest } from '@open-cms/shared/utils';
+
 // Utils
 import logger from '../../utils/logger';
-import { validateRequest } from '@open-cms/shared/utils';
 
 // Data schema
 import { createSiteSchema, updateSiteSchema } from './schema';
