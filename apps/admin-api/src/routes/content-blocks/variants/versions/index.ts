@@ -172,6 +172,7 @@ router.post('/:versionId/publish', validateVersionPublicationRequest(), async (r
         version: {
           localeCode: contentBlockVariantVersion.localeCode,
           variant: {
+            id: contentBlockVariantVersion.contentBlockVariantId,
             contentBlock: {
               id: contentBlock.id
             }
@@ -188,6 +189,7 @@ router.post('/:versionId/publish', validateVersionPublicationRequest(), async (r
       // Delete old publications from other versions.
       await Promise.all(
         existingPublications.map(async (publication) => {
+          logger.info(`Deleting content block variant version publication ${publication.id} (${contentBlockVariantVersion.contentBlockVariantId}).`)
           await prisma.contentBlockVariantVersionPublication.delete({
             where: {
               id: publication.id
