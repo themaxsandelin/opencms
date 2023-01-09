@@ -172,7 +172,7 @@ router.post('/:versionId/publish', validateVersionPublicationRequest(), async (r
         version: {
           localeCode: contentBlockVariantVersion.localeCode,
           variant: {
-            id: contentBlockVariantVersion.id,
+            id: contentBlockVariantVersion.variantId,
             contentBlock: {
               id: contentBlock.id
             }
