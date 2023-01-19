@@ -18,3 +18,16 @@ When running the api locally and you want to set up your database with the Prism
 ```bash
 pnpm prisma db push
 ```
+
+### Running
+
+Content API:
+```bash
+pnpm nx serve content-api
+```
+
+Admin API:
+```bash
+pnpm nx serve admin-api
+```
+

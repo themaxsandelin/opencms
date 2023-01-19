@@ -22,6 +22,7 @@ const app: Express = express();
 app.use(express.json());
 app.use(async (req, res, next) => {
   if (!req.headers.authorization) {
+    console.error('No authorization header found.', req.headers);
     return res.status(401).json({ error: 'Unauthorized.' });
   }
   const [, token] = req.headers.authorization.split(' ');
@@ -44,5 +45,5 @@ app.use(async (req, res, next) => {
 app.use(router);
 
 app.listen(port, () => {
-  logger.info('[🤖 Admin API Server]: Up and running!');
+  logger.info(`[🤖 Admin API Server]: Up and running listening on ${port}`);
 });
