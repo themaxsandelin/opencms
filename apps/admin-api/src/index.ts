@@ -6,6 +6,10 @@ import router from './routes';
 
 // Shared
 import logger from './utils/logger';
+import {
+  RequestLogger,
+  ErrorLogger,
+} from '@open-cms/shared/utils/requestlogger';
 
 // Utils
 import { authorizeUserByToken } from './utils/auth';
@@ -41,8 +45,10 @@ app.use(async (req, res, next) => {
   next();
 });
 
+app.use(RequestLogger(logger));
 app.use(router);
+app.use(ErrorLogger(logger));
 
 app.listen(port, () => {
-  logger.info('[🤖 Admin API Server]: Up and running!');
+  logger.info(`[🤖 Admin API Server]: Up and running on port ${port}`);
 });
