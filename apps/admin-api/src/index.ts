@@ -45,5 +45,5 @@ app.use(async (req, res, next) => {
 app.use(router);
 
 app.listen(port, () => {
-  logger.info(`[🤖 Admin API Server]: Up and running on ${port}`);
+  logger.info(`[🤖 Admin API Server]: Up and running on port ${port}`);
 });
