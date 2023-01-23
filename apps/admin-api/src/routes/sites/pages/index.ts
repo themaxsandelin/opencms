@@ -28,17 +28,77 @@ router.get('/', async (req: Request, res: Response) => {
     const pages = await prisma.page.findMany({
       where: {
         siteId,
-        name: search ? {
-          contains: (search as string)
-        } : {
-          not: ''
-        }
+        name: search
+          ? {
+              contains: search as string,
+            }
+          : {
+              not: '',
+            },
       },
       include: {
-        parent: true,
+        parent: {
+          include: {
+            parent: {
+              include: {
+                parent: {
+                  include: {
+                    parent: {
+                      include: {
+                        parent: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
         createdBy: true,
         updatedBy: true,
-      }
+        instances: true,
+        layouts: true,
+      },
+      orderBy: [
+        {
+          parent: {
+            parent: {
+              parent: {
+                parent: {
+                  parentId: 'asc',
+                },
+              },
+            },
+          },
+        },
+        {
+          parent: {
+            parent: {
+              parent: {
+                parentId: 'asc',
+              },
+            },
+          },
+        },
+        {
+          parent: {
+            parent: {
+              parentId: 'asc',
+            },
+          },
+        },
+        {
+          parent: {
+            parentId: 'asc',
+          },
+        },
+        {
+          parentId: 'asc',
+        },
+        {
+          name: 'asc',
+        },
+      ],
     });
 
     res.json({ data: pages });
