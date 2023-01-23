@@ -17,5 +17,5 @@ const port = env.PORT || 3200;
 app.use(router);
 
 app.listen(port, () => {
-  logger.info('[🤖 Content API Server]: Up and running!');
+  logger.info(`[🤖 Content API Server]: Up and running on port ${port}`);
 });
