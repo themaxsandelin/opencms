@@ -5,9 +5,10 @@ import express, { Express } from 'express';
 import router from './routes';
 
 // Shared
-import logger from './utils/logger';
+import { RequestLogger, ErrorLogger } from '@open-cms/shared/utils/request-logger';
 
 // Utils
+import logger from './utils/logger';
 import { authorizeUserByToken } from './utils/auth';
 import { validateEnvVars } from './utils/env';
 
@@ -42,7 +43,9 @@ app.use(async (req, res, next) => {
   next();
 });
 
+app.use(RequestLogger(logger));
 app.use(router);
+app.use(ErrorLogger(logger));
 
 app.listen(port, () => {
   logger.info(`[🤖 Admin API Server]: Up and running on port ${port}`);
