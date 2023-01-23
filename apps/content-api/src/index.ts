@@ -4,9 +4,11 @@ import express, { Express } from 'express';
 // Main router
 import router from './routes';
 
+// Shared
+import { RequestLogger, ErrorLogger } from '@open-cms/shared/utils/request-logger';
+
 // Utils
 import logger from './utils/logger';
-import { RequestLogger, ErrorLogger } from '@open-cms/shared/utils/requestlogger';
 
 // Workaround NX overwriting env variables at build time.
 const env = { ...process }.env;
