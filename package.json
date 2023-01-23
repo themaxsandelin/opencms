@@ -3,8 +3,6 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
-    "content-api": "nx serve content-api",
-    "admin-api": "nx serve admin-api",
     "start": "nx serve",
     "build": "nx build",
     "test": "nx test"
