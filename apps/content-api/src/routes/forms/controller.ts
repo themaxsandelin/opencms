@@ -19,7 +19,11 @@ function validateFormField(field: any, data: any): ValidationResponse {
   const fieldHasValue =
     Object.prototype.hasOwnProperty.call(data, config.key) &&
     data[config.key] !== '';
-  if (!fieldHasValue && config.alwaysRequired) {
+  if (
+    !fieldHasValue &&
+    config.alwaysRequired &&
+    config.label.values[data.selectedLocale.code] // If we dont have a translation for this field, it cant be mandatory because it wont be shown
+  ) {
     return {
       valid: false,
       cause: 'missing-required',

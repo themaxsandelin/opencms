@@ -5,13 +5,10 @@ import express, { Express } from 'express';
 import router from './routes';
 
 // Shared
-import logger from './utils/logger';
-import {
-  RequestLogger,
-  ErrorLogger,
-} from '@open-cms/shared/utils/requestlogger';
+import { RequestLogger, ErrorLogger } from '@open-cms/shared/utils/request-logger';
 
 // Utils
+import logger from './utils/logger';
 import { authorizeUserByToken } from './utils/auth';
 import { validateEnvVars } from './utils/env';
 
@@ -26,6 +23,7 @@ const app: Express = express();
 app.use(express.json());
 app.use(async (req, res, next) => {
   if (!req.headers.authorization) {
+    logger.error('No authorization header found.', req.headers);
     return res.status(401).json({ error: 'Unauthorized.' });
   }
   const [, token] = req.headers.authorization.split(' ');
