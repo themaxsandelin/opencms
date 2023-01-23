@@ -23,6 +23,7 @@ const app: Express = express();
 app.use(express.json());
 app.use(async (req, res, next) => {
   if (!req.headers.authorization) {
+    logger.error('No authorization header found.', req.headers);
     return res.status(401).json({ error: 'Unauthorized.' });
   }
   const [, token] = req.headers.authorization.split(' ');

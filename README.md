@@ -18,3 +18,11 @@ When running the api locally and you want to set up your database with the Prism
 ```bash
 pnpm prisma db push
 ```
+
+## Apps & services
+The project uses [nx](https://nx.dev/) as a monorepo tool to manage all services and code in the project. You can refer to their [documentation](https://nx.dev/core-features) for any actions you'd like to take on the project overall.
+
+But as an example, to run any of the apps, you use the `nx serve` command. So, to run the content-api, you use the command like this:
+```bash
+pnpm nx serve content-api
+```
