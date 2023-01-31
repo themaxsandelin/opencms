@@ -333,6 +333,7 @@ model FormVersionSubmissionFile {
   originalName String
   submission FormVersionSubmission @relation(fields: [submissionId], references: [id])
   submissionId String
+  deleted Boolean @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt @default(now())
 }
